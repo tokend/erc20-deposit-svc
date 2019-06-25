@@ -1,0 +1,20 @@
+name: AtomicSwapRequestDetails
+key: request-details-atomic-swap
+base: request-details
+attributes:
+  -
+    name: base_amount
+    type: Amount
+  -
+    name: creator_details
+    type: Object
+
+relations:
+  -
+    name: bid
+    is_collection: false
+    resource: request-details-aswap-bid
+  -
+    name: quote_asset
+    is_collection: false
+    resource: quote-assets

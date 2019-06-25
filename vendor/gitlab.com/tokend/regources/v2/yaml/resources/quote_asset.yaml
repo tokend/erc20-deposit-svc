@@ -1,0 +1,13 @@
+name: QuoteAsset
+key: quote-assets
+
+attributes:
+  -
+    name: price
+    type: Amount
+
+relations:
+  - 
+    name: asset
+    is_collection: false
+    resource: assets

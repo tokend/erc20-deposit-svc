@@ -1,0 +1,8 @@
+name: OpCancelAtomicSwapBidDetails
+key: operations-cancel-aswap-bid
+base: operation-details
+relations:
+  -
+    name: bid
+    is_collection: false
+    resource: request-details-aswap-bid

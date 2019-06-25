@@ -1,0 +1,40 @@
+name: Sale
+key: sales
+
+attributes:
+  -
+    name: start_time
+    type: Date
+  -
+    name: end_time
+    type: Date
+  -
+    name: sale_type
+    type: XdrEnumValue
+  -
+    name: sale_state
+    type: XdrEnumValue
+  -
+    name: investors_count
+    type: Int
+  -
+    name: details
+    type: Object
+
+relations:
+  -
+    name: owner
+    is_collection: false
+    resource: accounts
+  -
+    name: base_asset
+    is_collection: false
+    resource: assets
+  -
+    name: quote_assets
+    is_collection: true
+    resource: sale-quote-assets
+  -
+    name: default_quote_asset
+    is_collection: false
+    resource: sale-quote-assets

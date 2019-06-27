@@ -12,6 +12,7 @@ import (
 
 //go:generate genny -in=getter.tmpl -out=asset_getter.go gen "Template=Asset Resource=Asset"
 //go:generate genny -in=getter.tmpl -out=transaction_getter.go gen "Template=Transaction Resource=Transaction"
+//go:generate genny -in=getter.tmpl -out=issuance_getter.go gen "Template=ReviewableRequest Resource=CreateIssuanceRequest"
 
 type Getter interface {
 	GetPage(endpoint string, params query.Params, result interface{}) error

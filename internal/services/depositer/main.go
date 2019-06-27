@@ -5,6 +5,7 @@ import (
 	"github.com/tokend/erc20-deposit-svc/internal/config"
 	"github.com/tokend/erc20-deposit-svc/internal/horizon/submit"
 	"github.com/tokend/erc20-deposit-svc/internal/services/issuer"
+	"github.com/tokend/erc20-deposit-svc/internal/services/verifier"
 	"github.com/tokend/erc20-deposit-svc/internal/transaction"
 	"sync"
 
@@ -56,7 +57,7 @@ func New(cfg config.Config) *Service {
 func (s *Service) Run(ctx context.Context) {
 	go s.assetWatcher.Run(ctx)
 
-	s.Add(1)
+	s.Add(2)
 	go s.spawner(ctx)
 	go s.cancellor(ctx)
 	s.Wait()
@@ -103,11 +104,24 @@ func (s *Service) spawn(ctx context.Context, details watchlist.Details) {
 		TxSubmitter: submit.New(s.config.Horizon()),
 		Chan:        transfers,
 	})
+	verifierService := verifier.New(verifier.Opts{
+		Builder:   s.builder,
+		Log:       s.log,
+		Config:    s.config.DepositConfig(),
+		Submitter: submit.New(s.config.Horizon()),
+		Client:    *s.config.EthClient(),
+		Asset:     details,
+
+		Streamer: getters.NewDefaultCreateIssuanceRequestHandler(s.config.Horizon()),
+	})
+
+
 	localCtx, cancelFunc := context.WithCancel(ctx)
 	s.spawned.Store(details.Asset.ID, cancelFunc)
 
 	go transferStreamer.Run(localCtx)
 	go issueSubmitter.Run(localCtx)
+	go verifierService.Run(localCtx)
 
 	s.log.WithField("asset", details.ID).Info("Started listening for deposits")
 }

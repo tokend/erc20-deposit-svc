@@ -17,6 +17,7 @@
 package les
 
 import (
+	"context"
 	"sync"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -36,19 +37,25 @@ type LesTxRelay struct {
 	peerList     []*peer
 	peerStartPos int
 	lock         sync.RWMutex
+	stop         chan struct{}
 
-	reqDist *requestDistributor
+	retriever *retrieveManager
 }
 
-func NewLesTxRelay(ps *peerSet, reqDist *requestDistributor) *LesTxRelay {
+func NewLesTxRelay(ps *peerSet, retriever *retrieveManager) *LesTxRelay {
 	r := &LesTxRelay{
 		txSent:    make(map[common.Hash]*ltrInfo),
 		txPending: make(map[common.Hash]struct{}),
 		ps:        ps,
-		reqDist:   reqDist,
+		retriever: retriever,
+		stop:      make(chan struct{}),
 	}
 	ps.notify(r)
 	return r
+}
+
+func (self *LesTxRelay) Stop() {
+	close(self.stop)
 }
 
 func (self *LesTxRelay) registerPeer(p *peer) {
@@ -123,16 +130,16 @@ func (self *LesTxRelay) send(txs types.Transactions, count int) {
 				return peer.GetTxRelayCost(len(ll), len(enc))
 			},
 			canSend: func(dp distPeer) bool {
-				return dp.(*peer) == pp
+				return !dp.(*peer).isOnlyAnnounce && dp.(*peer) == pp
 			},
 			request: func(dp distPeer) func() {
 				peer := dp.(*peer)
 				cost := peer.GetTxRelayCost(len(ll), len(enc))
-				peer.fcServer.QueueRequest(reqID, cost)
+				peer.fcServer.QueuedRequest(reqID, cost)
 				return func() { peer.SendTxs(reqID, cost, enc) }
 			},
 		}
-		self.reqDist.queue(rq)
+		go self.retriever.retrieve(context.Background(), reqID, rq, func(p distPeer, msg *Msg) error { return nil }, self.stop)
 	}
 }
 

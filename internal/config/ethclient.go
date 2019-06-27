@@ -32,10 +32,10 @@ func (h *ether) EthClient() *ethclient.Client {
 		err := figure.
 			Out(&config).
 			With(figure.BaseHooks).
-			From(kv.MustGetStringMap(h.getter, "ether")).
+			From(kv.MustGetStringMap(h.getter, "rpc")).
 			Please()
 		if err != nil {
-			panic(errors.Wrap(err, "failed to figure out ether"))
+			panic(errors.Wrap(err, "failed to figure out rpc"))
 		}
 		eth, err := ethclient.Dial(config.Endpoint)
 		if err != nil {

@@ -65,4 +65,4 @@
 
 [[constraint]]
   name = "github.com/ethereum/go-ethereum"
-  version = "1.8.27"
+  revision = "2b546660187e8b693b6bbe5ec0fc74bfc008d1d3"

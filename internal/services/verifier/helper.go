@@ -81,6 +81,7 @@ func (s *Service) ensureEnoughConfirmations(ctx context.Context, blockNumber int
 	}
 	if err != nil {
 		s.log.WithError(err).Error("got error trying to fetch block")
+		return false
 	}
 
 	return true

@@ -76,7 +76,7 @@ func (s *Service) getWatchList() ([]Details, error) {
 	for len(assetsResponse.Data) > 0 {
 		assetsResponse, err = s.streamer.Next()
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to get next page of assetsResponse", logan.F{
+			return nil, errors.Wrap(err, "failed to get next page of assets", logan.F{
 				"links": links,
 			})
 		}

@@ -8,7 +8,7 @@ import (
 	"github.com/tokend/erc20-deposit-svc/internal/horizon/client"
 	"github.com/tokend/erc20-deposit-svc/internal/horizon/page"
 	"github.com/tokend/erc20-deposit-svc/internal/horizon/query"
-	"gitlab.com/distributed_lab/logan"
+	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/distributed_lab/logan/v3/errors"
 	regources "gitlab.com/tokend/regources/generated"
 )
@@ -141,7 +141,7 @@ func (g *defaultAssetHandler) Prev() (*regources.AssetListResponse, error) {
 	result := &regources.AssetListResponse{}
 	err := g.base.PageFromLink(g.currentPageLinks.Prev, result)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get next page", logan.F{
+		return nil, errors.Wrap(err, "failed to get previous page", logan.F{
 			"link": g.currentPageLinks.Prev,
 		})
 	}

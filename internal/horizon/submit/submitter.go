@@ -98,7 +98,7 @@ func (s *submitter) Submit(ctx context.Context, envelope string, waitIngest bool
 		// check which error it was exactly, might be useful for consumer
 		var failureResp txFailureResponse
 		if err := json.Unmarshal(response, &failureResp); err != nil {
-			panic(errors.Wrap(err, "failed to unmarshal horizon response"))
+			return nil, errors.Wrap(err, "failed to unmarshal horizon response")
 		}
 		return nil, newTxFailure(failureResp)
 	case http.StatusInternalServerError: // internal error

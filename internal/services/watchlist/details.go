@@ -20,7 +20,13 @@ func (s AssetDetails) Validate() error {
 	errs := validation.Errors{
 		"ExternalSystemType": validation.Validate(&s.ExternalSystemType, validation.Required, validation.Min(1)),
 		"Deposit":            validation.Validate(&s.ERC20.Deposit, validation.Required),
-		"Address":            validation.Validate(&s.ERC20.Address, validation.Required),
+		"Address": validation.Validate(
+			&s.ERC20.Address,
+			validation.Required,
+			validation.NewStringRule(
+				common.IsHexAddress,
+				"must be valid contract address",
+			)),
 	}
 
 	return errs.Filter()

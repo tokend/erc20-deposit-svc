@@ -64,7 +64,6 @@ func (s *Service) processTransfer(ctx context.Context, transfer transfer.Details
 		return errors.Wrap(err, "failed to marshal transfer details")
 	}
 
-	//TODO
 	refHash := hash.Hash([]byte(transfer.TransactionHash))
 
 	reference := hex.EncodeToString(refHash[:])

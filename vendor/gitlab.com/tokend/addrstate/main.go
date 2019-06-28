@@ -112,16 +112,15 @@ func (w *Watcher) run(ctx context.Context) {
 						}
 					}
 				}
+			}
+			// if we made it here it's safe to bump head cursor
+			w.head = txResp.Meta.LatestLedgerCloseTime
 
-				// if we made it here it's safe to bump head cursor
-				w.head = txResp.Meta.LatestLedgerCloseTime
-
-				// must be in select to listen new updates.
-				// If not gets all updates before time it was run and then w.headUpdate locks
-				select {
-				case w.headUpdate <- struct{}{}:
-				default:
-				}
+			// must be in select to listen new updates.
+			// If not gets all updates before time it was run and then w.headUpdate locks
+			select {
+			case w.headUpdate <- struct{}{}:
+			default:
 			}
 		case err := <-txStreamErrs:
 			w.log.WithError(err).Warn("TXStreamer sent error into channel.")

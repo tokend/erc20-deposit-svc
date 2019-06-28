@@ -21,7 +21,7 @@ func (s *Service) approveRequest(
 	}
 	bb, err := json.Marshal(extDetails)
 	if err != nil {
-		return errors.Wrap(err, "failed to marshal external bb map")
+		return errors.Wrap(err, "failed to marshal external details")
 	}
 	envelope, err := s.builder.Transaction(s.depositCfg.AssetOwner).Op(xdrbuild.ReviewRequest{
 		ID:     id,
@@ -35,11 +35,11 @@ func (s *Service) approveRequest(
 		Details: xdrbuild.IssuanceDetails{},
 	}).Sign(s.depositCfg.AssetIssuer).Marshal()
 	if err != nil {
-		return errors.Wrap(err, "failed to prepareVerify transaction envelope")
+		return errors.Wrap(err, "failed to prepare transaction envelope")
 	}
 	_, err = s.txSubmitter.Submit(ctx, envelope, true)
 	if err != nil {
-		return errors.Wrap(err, "failed to approve withdraw request")
+		return errors.Wrap(err, "failed to approve issuance request")
 	}
 
 	return nil
@@ -56,6 +56,7 @@ func (s *Service) permanentReject(
 		ID:     id,
 		Hash:   &request.Attributes.Hash,
 		Action: xdr.ReviewRequestOpActionPermanentReject,
+		Reason: reason,
 		ReviewDetails: xdrbuild.ReviewDetails{
 			ExternalDetails: "{}",
 		},
@@ -66,7 +67,7 @@ func (s *Service) permanentReject(
 	}
 	_, err = s.txSubmitter.Submit(ctx, envelope, true)
 	if err != nil {
-		return errors.Wrap(err, "failed to approve permanently reject request")
+		return errors.Wrap(err, "failed to permanently reject request")
 	}
 
 	return nil

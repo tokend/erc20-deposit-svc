@@ -50,7 +50,9 @@ func (s *Service) confirmIssuanceSuccessful(ctx context.Context, request regourc
 		return nil
 	}
 	if err != nil {
-		return errors.Wrap(err, "call failed")
+		return errors.Wrap(err, "failed to get transaction receipt", logan.F{
+			"tx_hash": issuanceDetails.EthTxHash,
+		})
 	}
 
 	if receipt.Status != types.ReceiptStatusSuccessful {

@@ -33,6 +33,7 @@ rpc:
 
 ethereum:
   checkpoint: #block to start listening for deposits from
+  confirmations: 20 #number of confirmations to wait for
 
 horizon:
   endpoint: "SOME_VALID_ADDRESS"

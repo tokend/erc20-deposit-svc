@@ -2,12 +2,14 @@ package cli
 
 import (
 	"context"
+	"fmt"
 	"github.com/tokend/erc20-deposit-svc/internal/config"
 	"github.com/tokend/erc20-deposit-svc/internal/services/depositer"
 	"gitlab.com/distributed_lab/kit/kv"
 	"gitlab.com/distributed_lab/logan/v3"
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
+	"gopkg.in/alecthomas/kingpin.v2"
 )
+
 //Run runs service
 func Run(args []string) bool {
 	log := logan.New()
@@ -21,6 +23,7 @@ func Run(args []string) bool {
 	app := kingpin.New("erc20-deposit-svc", "")
 	runCmd := app.Command("run", "run command")
 	deposit := runCmd.Command("deposit", "run deposit service")
+	versionCmd := app.Command("version", "service revision")
 
 	cmd, err := app.Parse(args[1:])
 	if err != nil {
@@ -30,11 +33,12 @@ func Run(args []string) bool {
 	cfg := config.NewConfig(kv.MustFromEnv())
 	log = cfg.Log()
 
-
 	switch cmd {
 	case deposit.FullCommand():
 		svc := depositer.New(cfg)
 		svc.Run(context.Background())
+	case versionCmd.FullCommand():
+		fmt.Println(config.ERC20DepositVersion)
 	default:
 		log.WithField("command", cmd).Error("Unknown command")
 		return false

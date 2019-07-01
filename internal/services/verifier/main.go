@@ -17,13 +17,14 @@ type Opts struct {
 	Builder   xdrbuild.Builder
 	Log       *logan.Entry
 	Streamer  getters.CreateIssuanceRequestHandler
-	Config    config.DepositConfig
+	Config    config.Config
 	Asset     watchlist.Details
 }
 
 type Service struct {
 	depositCfg config.DepositConfig
-	asset       watchlist.Details
+	ethCfg     config.EthereumConfig
+	asset      watchlist.Details
 
 	builder     xdrbuild.Builder
 	issuances   getters.CreateIssuanceRequestHandler
@@ -38,7 +39,8 @@ func New(opts Opts) *Service {
 	return &Service{
 		client:      &opts.Client,
 		log:         opts.Log,
-		depositCfg: opts.Config,
+		depositCfg:  opts.Config.DepositConfig(),
+		ethCfg:      opts.Config.EthereumConfig(),
 		txSubmitter: opts.Submitter,
 		builder:     opts.Builder,
 		asset:       opts.Asset,

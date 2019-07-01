@@ -5,6 +5,8 @@ import (
 	"gitlab.com/distributed_lab/kit/kv"
 )
 
+var ERC20DepositVersion string
+
 type config struct {
 	depositConfig  DepositConfig
 	ethereumConfig EthereumConfig
@@ -29,7 +31,7 @@ func NewConfig(getter kv.Getter) Config {
 	return &config{
 		getter:    getter,
 		Horizoner: NewHorizoner(getter),
-		Logger:    comfig.NewLogger(getter, comfig.LoggerOpts{}),
+		Logger:    comfig.NewLogger(getter, comfig.LoggerOpts{Release: ERC20DepositVersion}),
 		Ether:     NewEther(getter),
 	}
 }

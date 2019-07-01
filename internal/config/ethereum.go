@@ -9,6 +9,7 @@ import (
 
 type EthereumConfig struct {
 	Checkpoint uint64 `fig:"checkpoint"`
+	Confirmations int64 `fig:"confirmations"`
 }
 
 func (c *config) EthereumConfig() EthereumConfig {

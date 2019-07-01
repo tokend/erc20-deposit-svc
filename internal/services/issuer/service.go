@@ -45,7 +45,7 @@ func (s *Service) Run(ctx context.Context) {
 
 func (s *Service) processTransfer(ctx context.Context, transfer transfer.Details) error {
 	destination := strings.ToLower(transfer.Destination.String())
-	address := s.addressProvider.ExternalAccountAt(ctx, transfer.BlockTime, s.asset.ExternalSystemType, destination)
+	address := s.addressProvider.ExternalAccountAt(ctx, transfer.BlockTime, s.asset.ExternalSystemType, destination, nil)
 	if address == nil {
 		return nil
 	}

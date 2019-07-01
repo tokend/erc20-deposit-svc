@@ -138,14 +138,6 @@
   version = "v0.2.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:d0557c61d3acd22f04f7b6b675b847381034b229b7dce10b1d31bfa0d7f30017"
-  name = "github.com/go-errors/errors"
-  packages = ["."]
-  pruneopts = "T"
-  revision = "d98b870cc4e05f1545532a80e9909be8216095b6"
-
-[[projects]]
   digest = "1:aa047c900450fea2242fbb449076eb20cea8278f3b15d2db1950a3c8da8e4308"
   name = "github.com/go-ozzo/ozzo-validation"
   packages = ["."]
@@ -366,7 +358,6 @@
   digest = "1:ee02775946cf2c8cdbc17545fe48918fd4f23892f72d57ba2e7806b620c72074"
   name = "gitlab.com/distributed_lab/logan"
   packages = [
-    ".",
     "v3",
     "v3/errors",
     "v3/fields",
@@ -385,11 +376,11 @@
 
 [[projects]]
   branch = "feature/v3"
-  digest = "1:967f3dbde879b5eeb2a6f7abde45d5a116d1f26ed562cf143c26946b1c47b129"
+  digest = "1:e40b171dde5e66368a2da109e8f57e05603dacb1aef9e258651cddce9bc2bee3"
   name = "gitlab.com/tokend/addrstate"
   packages = ["."]
   pruneopts = "T"
-  revision = "5db302be50a9cb31336e80af8164511f78d5406c"
+  revision = "51581e890c177c95575ae44129c54ef1bcd6c70c"
 
 [[projects]]
   digest = "1:29aff02b2e23f2f76016e1f017aac722c98cd0380a9fbe45cb87d4272911f94f"
@@ -522,7 +513,6 @@
     "gitlab.com/distributed_lab/figure",
     "gitlab.com/distributed_lab/kit/comfig",
     "gitlab.com/distributed_lab/kit/kv",
-    "gitlab.com/distributed_lab/logan",
     "gitlab.com/distributed_lab/logan/v3",
     "gitlab.com/distributed_lab/logan/v3/errors",
     "gitlab.com/distributed_lab/running",

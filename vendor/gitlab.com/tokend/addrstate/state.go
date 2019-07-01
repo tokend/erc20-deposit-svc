@@ -12,8 +12,8 @@ import (
 )
 
 type Price struct {
-	UpdatedAt time.Time
-	Value     int64
+	UpdatedAt     time.Time
+	Value         int64
 	PhysicalPrice int64
 }
 
@@ -24,6 +24,16 @@ type AssetPair struct {
 
 func (ap *AssetPair) String() string {
 	return fmt.Sprintf("%s-%s", ap.Base, ap.Quote)
+}
+
+type ExternalDataEntry struct {
+	Address string  `json:"address"`
+	Payload *string `json:"payload,omitempty"`
+}
+
+type ExternalData struct {
+	Type string            `json:"type"`
+	Data ExternalDataEntry `json:"data"`
 }
 
 type externalState struct {
@@ -38,28 +48,28 @@ type State struct {
 	// address -> asset -> balance
 	balances map[string]map[string]string
 	// external type -> external data -> []events
-	external map[int32]map[string][]externalState
+	external map[int32]map[ExternalData][]externalState
 	// helper variable for reverse find on external
-	internalExternal map[int32]map[string]string
+	internalExternal map[int32]map[string]ExternalData
 	// mapping from account address to its current KYC data
-	accountKYC          map[string]string
-	assetPair           map[AssetPair][]Price
-	chAssetPairs        []chan AssetPairEvent
-	sale                map[string]time.Time
-	chSale              []chan SaleEvent
+	accountKYC   map[string]string
+	assetPair    map[AssetPair][]Price
+	chAssetPairs []chan AssetPairEvent
+	sale         map[string]time.Time
+	chSale       []chan SaleEvent
 }
 
 func newState() *State {
 	return &State{
-		RWMutex:             &sync.RWMutex{},
-		external:            map[int32]map[string][]externalState{},
-		internalExternal:    map[int32]map[string]string{},
-		balances:            map[string]map[string]string{},
-		accountKYC:          map[string]string{},
-		assetPair:           map[AssetPair][]Price{},
-		chAssetPairs:        []chan AssetPairEvent{},
-		sale:                map[string]time.Time{},
-		chSale:              []chan SaleEvent{},
+		RWMutex:          &sync.RWMutex{},
+		external:         map[int32]map[ExternalData][]externalState{},
+		internalExternal: map[int32]map[string]ExternalData{},
+		balances:         map[string]map[string]string{},
+		accountKYC:       map[string]string{},
+		assetPair:        map[AssetPair][]Price{},
+		chAssetPairs:     []chan AssetPairEvent{},
+		sale:             map[string]time.Time{},
+		chSale:           []chan SaleEvent{},
 	}
 }
 
@@ -77,7 +87,7 @@ func (s *State) Mutate(ts time.Time, update StateUpdate) {
 		case ExternalAccountBindingStateCreated:
 			externalType := data.ExternalType
 			if _, ok := s.external[externalType]; !ok {
-				s.external[externalType] = map[string][]externalState{}
+				s.external[externalType] = map[ExternalData][]externalState{}
 			}
 			s.external[externalType][data.Data] = append(s.external[externalType][data.Data], externalState{
 				State:     data.State,
@@ -85,7 +95,7 @@ func (s *State) Mutate(ts time.Time, update StateUpdate) {
 				UpdatedAt: ts,
 			})
 			if _, ok := s.internalExternal[externalType]; !ok {
-				s.internalExternal[externalType] = map[string]string{}
+				s.internalExternal[externalType] = map[string]ExternalData{}
 			}
 			s.internalExternal[externalType][data.Address] = data.Data
 		case ExternalAccountBindingStateDeleted:

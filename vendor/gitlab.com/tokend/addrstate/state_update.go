@@ -11,11 +11,11 @@ const (
 
 // StateUpdate is a connector between LedgerEntryChange and Watcher state for specific consumers
 type StateUpdate struct {
-	ExternalAccount     *StateExternalAccountUpdate
-	Balance             *StateBalanceUpdate
-	AccountKYC          *StateAccountKYCUpdate
-	AssetPair           *StateAssetPairUpdate
-	Sale                *StateSaleUpdate
+	ExternalAccount *StateExternalAccountUpdate
+	Balance         *StateBalanceUpdate
+	AccountKYC      *StateAccountKYCUpdate
+	AssetPair       *StateAssetPairUpdate
+	Sale            *StateSaleUpdate
 }
 
 type StateAccountKYCUpdate struct {
@@ -27,7 +27,7 @@ type StateExternalAccountUpdate struct {
 	// ExternalType external system accound id type
 	ExternalType int32
 	// Data external system pool entity data
-	Data string
+	Data ExternalData
 	// Address is a TokenD account address
 	Address string
 	// State shows current external pool entity binding state
@@ -41,9 +41,9 @@ type StateBalanceUpdate struct {
 }
 
 type StateAssetPairUpdate struct {
-	Base         xdr.AssetCode
-	Quote        xdr.AssetCode
-	CurrentPrice int64
+	Base          xdr.AssetCode
+	Quote         xdr.AssetCode
+	CurrentPrice  int64
 	PhysicalPrice int64
 }
 

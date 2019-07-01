@@ -107,14 +107,13 @@ func (s *Service) spawn(ctx context.Context, details watchlist.Details) {
 	verifierService := verifier.New(verifier.Opts{
 		Builder:   s.builder,
 		Log:       s.log,
-		Config:    s.config.DepositConfig(),
+		Config:    s.config,
 		Submitter: submit.New(s.config.Horizon()),
 		Client:    *s.config.EthClient(),
 		Asset:     details,
 
 		Streamer: getters.NewDefaultCreateIssuanceRequestHandler(s.config.Horizon()),
 	})
-
 
 	localCtx, cancelFunc := context.WithCancel(ctx)
 	s.spawned.Store(details.Asset.ID, cancelFunc)

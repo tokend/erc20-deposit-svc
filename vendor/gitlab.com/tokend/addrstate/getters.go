@@ -7,7 +7,7 @@ import (
 	"gitlab.com/tokend/go/xdr"
 )
 
-func (w *Watcher) ExternalAccountAt(ctx context.Context, ts time.Time, systemType int32, data string) *string {
+func (w *Watcher) ExternalAccountAt(ctx context.Context, ts time.Time, systemType int32, address string, payload *string) *string {
 	w.ensureReached(ctx, ts)
 
 	w.state.RLock()
@@ -18,7 +18,14 @@ func (w *Watcher) ExternalAccountAt(ctx context.Context, ts time.Time, systemTyp
 		return nil
 	}
 
-	states := w.state.external[systemType][data]
+	externalDataType := "address"
+	if payload != nil {
+		externalDataType = "address_with_payload"
+	}
+	states := w.state.external[systemType][ExternalData{
+		Type: externalDataType,
+		Data: ExternalDataEntry{Address: address, Payload: payload},
+	}]
 	if len(states) == 0 {
 		return nil
 	}
@@ -44,7 +51,7 @@ func (w *Watcher) ExternalAccountAt(ctx context.Context, ts time.Time, systemTyp
 }
 
 // BindExternalSystemEntities returns all known external data for systemType
-func (w *Watcher) BindedExternalSystemEntities(ctx context.Context, systemType int32) (result []string) {
+func (w *Watcher) BindedExternalSystemEntities(ctx context.Context, systemType int32) (result []ExternalData) {
 	w.ensureReached(ctx, time.Now())
 
 	w.state.RLock()
@@ -105,9 +112,9 @@ func (w *Watcher) Balance(ctx context.Context, address string, asset string) *st
 }
 
 type AssetPairEvent struct {
-	Pair      string
-	UpdatedAt time.Time
-	Price     int64
+	Pair          string
+	UpdatedAt     time.Time
+	Price         int64
 	PhysicalPrice int64
 }
 
@@ -130,7 +137,7 @@ func (w *Watcher) AssetPair(ctx context.Context) chan AssetPairEvent {
 }
 
 // AssetPairPriceAt finds what price was for asset pair at a given time
-func(w *Watcher) AssetPairPriceAt(ctx context.Context, base, quote string, ts time.Time) *int64 {
+func (w *Watcher) AssetPairPriceAt(ctx context.Context, base, quote string, ts time.Time) *int64 {
 	w.ensureReached(ctx, time.Now())
 
 	w.state.RLock()
@@ -151,7 +158,7 @@ func(w *Watcher) AssetPairPriceAt(ctx context.Context, base, quote string, ts ti
 	}
 	// checking last known state
 	lastState := states[len(states)-1]
-	if ts.After(lastState.UpdatedAt)|| ts.Equal(lastState.UpdatedAt)  {
+	if ts.After(lastState.UpdatedAt) || ts.Equal(lastState.UpdatedAt) {
 		return &lastState.Value
 	}
 	return nil

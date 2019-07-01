@@ -22,7 +22,7 @@ type transactionStreamer interface {
 
 // addressProvider must be implemented by WatchAddress storage to pass into Service constructor.
 type addressProvider interface {
-	ExternalAccountAt(ctx context.Context, ts time.Time, externalSystem int32, externalData string) (address *string)
+	ExternalAccountAt(ctx context.Context, ts time.Time, externalSystem int32, externalAddress string, payload *string) (address *string)
 	Balance(ctx context.Context, address string, asset string) (balance *string)
 }
 

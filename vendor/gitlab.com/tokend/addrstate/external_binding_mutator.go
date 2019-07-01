@@ -1,10 +1,11 @@
 package addrstate
 
 import (
+	"encoding/json"
 	"gitlab.com/tokend/go/xdr"
 )
 
-type ExternalSystemBindingMutator struct{
+type ExternalSystemBindingMutator struct {
 	SystemType int32
 }
 
@@ -25,10 +26,16 @@ func (e ExternalSystemBindingMutator) GetStateUpdate(change xdr.LedgerEntryChang
 			if int32(data.ExternalSystemType) != e.SystemType {
 				break
 			}
+			externalData := ExternalData{}
+			databb := []byte(data.Data)
+			if err := json.Unmarshal(databb, &externalData); err != nil {
+				//todo add logging of some sort
+				break
+			}
 			update.ExternalAccount = &StateExternalAccountUpdate{
 				ExternalType: e.SystemType,
 				State:        ExternalAccountBindingStateCreated,
-				Data:         string(data.Data),
+				Data:         externalData,
 				Address:      data.AccountId.Address(),
 			}
 		}

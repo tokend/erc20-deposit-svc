@@ -1,0 +1,7 @@
+name: ConvertedBalancesCollection
+key: converted-balances-collections
+relations:
+  -
+    name: states
+    is_collection: true
+    resource: converted-balance-states

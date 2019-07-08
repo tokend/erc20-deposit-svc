@@ -1,0 +1,19 @@
+rpc:
+  endpoint: "ws://ETH_NODE_ADDRESS"
+
+ethereum:
+  checkpoint: #block to start listening for deposits from
+  confirmations: 20 #number of confirmations to wait for
+
+
+horizon:
+  endpoint: "SOME_VALID_ADDRESS"
+  signer: "G_ASSET_OWNER_SECRET_KEY" # Issuer of assets
+
+deposit:
+  signer: "S_ASSET_OWNER_SECRET_KEY"
+  owner: "G_ASSET_OWNER_ADDRESS"
+
+log:
+  level: debug
+  disable_sentry: true

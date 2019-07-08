@@ -1,0 +1,20 @@
+name: AssetPair
+key: asset-pairs
+
+attributes:
+  -
+    name: price
+    type: Amount
+  -
+    name: policies
+    type: XdrEnumBitmask
+
+relations:
+  -
+    name: base_asset
+    is_collection: false
+    resource: assets
+  -
+    name: quote_asset
+    is_collection: false
+    resource: assets

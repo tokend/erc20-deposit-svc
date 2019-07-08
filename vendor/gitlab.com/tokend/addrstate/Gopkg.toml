@@ -1,0 +1,23 @@
+[[constraint]]
+  name = "github.com/stretchr/testify"
+  version = "1.2.2"
+
+[[constraint]]
+  name = "gitlab.com/distributed_lab/logan"
+  version = "3.6.0"
+
+[[constraint]]
+  version = "3"
+  name = "gitlab.com/tokend/go"
+
+[[constraint]]
+  name = "gitlab.com/tokend/horizon-connector"
+  version = "4"
+
+[[constraint]]
+  version = "4"
+  name = "gitlab.com/tokend/regources"
+
+[prune]
+  go-tests = true
+  unused-packages = true

@@ -1,0 +1,27 @@
+name: Account
+key: accounts
+relations:
+  -
+    name: role
+    is_collection: false
+    resource: account-roles
+  -
+    name: balances
+    is_collection: true
+    resource: balances
+  -
+    name: referrer
+    is_collection: false
+    resource: accounts
+  -
+    name: limits
+    is_collection: true
+    resource: limits
+  -
+    name: external_system_ids
+    is_collection: true
+    resource: external-system-ids
+  -
+    name: fees
+    is_collection: true
+    resource: fees

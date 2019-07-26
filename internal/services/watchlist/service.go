@@ -3,18 +3,20 @@ package watchlist
 import (
 	"context"
 	"encoding/json"
+	"time"
+
 	"github.com/tokend/erc20-deposit-svc/internal/horizon/query"
 	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/distributed_lab/logan/v3/errors"
 	"gitlab.com/distributed_lab/running"
 	regources "gitlab.com/tokend/regources/generated"
-	"time"
 )
 
 //GetToAdd returns channel assets to watch deposits for will be sent into
 func (s *Service) GetToAdd() <-chan Details {
 	return s.toAdd
 }
+
 //GetToRemove returns channel assets to stop watching deposits for will be sent into
 func (s *Service) GetToRemove() <-chan string {
 	return s.toRemove
@@ -98,7 +100,6 @@ func (s *Service) filter(assets []regources.Asset) ([]Details, error) {
 		details := asset.Attributes.Details
 		assetDetails := AssetDetails{}
 		_ = json.Unmarshal([]byte(details), &assetDetails)
-
 
 		if !assetDetails.ERC20.Deposit {
 			continue

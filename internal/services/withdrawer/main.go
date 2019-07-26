@@ -18,6 +18,7 @@ type Opts struct {
 	Asset           watchlist.Details
 	SystemType      uint32
 	AddressProvider *addrstate.Watcher
+	KeyPair         *eth.Keypair
 }
 
 type Service struct {
@@ -39,7 +40,7 @@ func NewWithdrawer(opts Opts) *Service {
 		log:             opts.Config.Log(),
 		addressProvider: opts.AddressProvider,
 		eth:             opts.Client,
-		keyPair:         opts.Config.FunnelConfig().KeyPair,
+		keyPair:         opts.KeyPair,
 		hotWallet:       opts.Config.FunnelConfig().HotWallet,
 		gasPrice:        opts.Config.FunnelConfig().GasPrice,
 		threshold:       opts.Config.FunnelConfig().Threshold,

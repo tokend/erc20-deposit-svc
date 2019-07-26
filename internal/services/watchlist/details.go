@@ -17,11 +17,12 @@ type AssetDetails struct {
 
 //Validate validates asset details
 func (s AssetDetails) Validate() error {
+	address := s.ERC20.Address.String()
 	errs := validation.Errors{
 		"ExternalSystemType": validation.Validate(&s.ExternalSystemType, validation.Required, validation.Min(1)),
 		"Deposit":            validation.Validate(&s.ERC20.Deposit, validation.Required),
 		"Address": validation.Validate(
-			&s.ERC20.Address,
+			&address,
 			validation.Required,
 			validation.NewStringRule(
 				common.IsHexAddress,

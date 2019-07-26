@@ -1,25 +1,23 @@
 package config
 
 import (
+	"fmt"
 	"math/big"
 	"reflect"
 
 	"github.com/tokend/erc20-deposit-svc/internal/services/withdrawer/eth"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/spf13/cast"
 	"gitlab.com/distributed_lab/figure"
 	"gitlab.com/distributed_lab/kit/kv"
-	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/distributed_lab/logan/v3/errors"
-	"gitlab.com/tokend/keypair/figurekeypair"
 )
 
 type FunnelConfig struct {
-	GasPrice  *big.Int       `fig:"gas_price,required"`
-	Threshold *big.Int       `fig:"threshold,required"`
-	HotWallet common.Address `fig:"hot_wallet,required"`
-	KeyPair   *eth.Keypair   `fig:"private_key,required"`
+	GasPrice   *big.Int       `fig:"gas_price,required"`
+	Threshold  *big.Int       `fig:"threshold,required"`
+	HotWallet  common.Address `fig:"hot_wallet,required"`
+	PrivateKey string         `fig:"private_key,required"`
 }
 
 func (c *config) FunnelConfig() FunnelConfig {
@@ -28,7 +26,7 @@ func (c *config) FunnelConfig() FunnelConfig {
 
 		err := figure.
 			Out(&result).
-			With(figure.BaseHooks, figurekeypair.Hooks, eth.KeypairHook, hooks).
+			With(figure.BaseHooks, eth.KeypairHook, hooks).
 			From(kv.MustGetStringMap(c.getter, "funnel")).
 			Please()
 		if err != nil {
@@ -40,25 +38,28 @@ func (c *config) FunnelConfig() FunnelConfig {
 }
 
 var hooks = figure.Hooks{
-	"[]common.Address": func(raw interface{}) (reflect.Value, error) {
-		addressesStrings, err := cast.ToStringSliceE(raw)
-		if err != nil {
-			return reflect.Value{}, errors.Wrap(err, "Failed to cast provider to map[string]interface{}")
-		}
-
-		var addresses []common.Address
-		for i, addrStr := range addressesStrings {
-			if !common.IsHexAddress(addrStr) {
+	"common.Address": func(value interface{}) (reflect.Value, error) {
+		switch v := value.(type) {
+		case string:
+			if !common.IsHexAddress(v) {
 				// provide value does not look like valid address
-				return reflect.Value{}, errors.From(errors.New("invalid address"), logan.F{
-					"address_string": addrStr,
-					"address_i":      i,
-				})
+				return reflect.Value{}, errors.New("invalid address")
 			}
-
-			addresses = append(addresses, common.HexToAddress(addrStr))
+			return reflect.ValueOf(common.HexToAddress(v)), nil
+		default:
+			return reflect.Value{}, fmt.Errorf("unsupported conversion from %T", value)
 		}
-
-		return reflect.ValueOf(addresses), nil
+	},
+	"*eth.Keypair": func(raw interface{}) (reflect.Value, error) {
+		switch value := raw.(type) {
+		case string:
+			kp, err := eth.NewKeypair(value)
+			if err != nil {
+				return reflect.Value{}, errors.Wrap(err, "failed to init keypair")
+			}
+			return reflect.ValueOf(*kp), nil
+		default:
+			return reflect.Value{}, fmt.Errorf("cant init keypair from type: %T", value)
+		}
 	},
 }

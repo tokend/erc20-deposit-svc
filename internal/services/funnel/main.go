@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/tokend/erc20-deposit-svc/internal/services/withdrawer/eth"
+
 	"gitlab.com/distributed_lab/logan/v3/errors"
 
 	"gitlab.com/distributed_lab/running"
@@ -41,7 +43,8 @@ type Service struct {
 	addressProvider *addrstate.Watcher
 	streamer        transactionStreamer
 
-	eth *ethclient.Client
+	eth     *ethclient.Client
+	keyPair *eth.Keypair
 
 	spawned        sync.Map
 	assetsToAdd    <-chan watchlist.Details
@@ -53,9 +56,8 @@ type Service struct {
 
 func New(cfg config.Config) *Service {
 	assetWatcher := watchlist.New(watchlist.Opts{
-		AssetOwner: cfg.DepositConfig().AssetOwner.Address(),
-		Streamer:   getters.NewDefaultAssetHandler(cfg.Horizon()),
-		Log:        cfg.Log(),
+		Streamer: getters.NewDefaultAssetHandler(cfg.Horizon()),
+		Log:      cfg.Log(),
 	})
 
 	return &Service{
@@ -73,6 +75,13 @@ func (s *Service) Run(ctx context.Context) error {
 	mutators := []addrstate.StateMutator{
 		addrstate.ExternalSystemBindingMutator{SystemType: int32(s.externalSystemType)},
 	}
+
+	keypair, err := eth.NewKeypair(s.config.FunnelConfig().PrivateKey)
+	if err != nil {
+		return errors.Wrap(err, "failed to init keypair")
+	}
+	s.keyPair = keypair
+
 	systemType, err := s.getSystemType(externalSystemTypeEthereumKey)
 	if err != nil {
 		return errors.Wrap(err, "failed to get external system type")
@@ -131,10 +140,11 @@ func (s *Service) spawn(ctx context.Context, details watchlist.Details) {
 			Asset:           details,
 			SystemType:      s.externalSystemType,
 			AddressProvider: s.addressProvider,
+			KeyPair:         s.keyPair,
 		})
 
-	running.WithBackOff(localCtx, s.log, "withdrawer-service", withdrawer.Run, time.Second, 10*time.Second, 5*time.Minute)
 	s.log.WithField("asset", details.ID).Info("Started listening for deposits")
+	running.WithBackOff(localCtx, s.log, "withdrawer-service", withdrawer.Run, time.Second, 10*time.Second, 5*time.Minute)
 }
 
 func (s *Service) getSystemType(key string) (*uint32, error) {

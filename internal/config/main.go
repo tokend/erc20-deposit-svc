@@ -11,6 +11,7 @@ type config struct {
 	depositConfig  DepositConfig
 	ethereumConfig EthereumConfig
 	funnelConfig   comfig.Once
+	deployerConfig comfig.Once
 
 	comfig.Logger
 	getter kv.Getter
@@ -23,6 +24,7 @@ type Config interface {
 	DepositConfig() DepositConfig
 	EthereumConfig() EthereumConfig
 	FunnelConfig() FunnelConfig
+	DeployerConfig() DeployerConfig
 
 	comfig.Logger
 	Horizoner

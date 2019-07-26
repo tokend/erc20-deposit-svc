@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"net/http"
+
 	"github.com/tokend/erc20-deposit-svc/internal/horizon/client"
 	"gitlab.com/tokend/go/xdr"
-	"net/http"
 
 	regources "gitlab.com/tokend/regources/generated"
 
@@ -15,9 +16,9 @@ import (
 
 var (
 	//ErrSubmitTimeout indicates that transaction submission has timed out
-	ErrSubmitTimeout              = errors.New("submit timed out")
+	ErrSubmitTimeout = errors.New("submit timed out")
 	//ErrSubmitInternal indicates that transaction submission has failed with internal error
-	ErrSubmitInternal             = errors.New("internal submit error")
+	ErrSubmitInternal = errors.New("internal submit error")
 	//ErrSubmitUnexpectedStatusCode indicates that transaction submission has failed with unexpected status code
 	ErrSubmitUnexpectedStatusCode = errors.New("unexpected unsuccessful status code")
 )
@@ -56,6 +57,7 @@ type Interface interface {
 type submitter struct {
 	*client.Client
 }
+
 //New creates new horizon submitter
 func New(cl *client.Client) Interface {
 	return &submitter{

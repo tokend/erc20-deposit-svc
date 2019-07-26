@@ -3,11 +3,13 @@ package withdrawer
 import (
 	"math/big"
 
+	"github.com/tokend/erc20-deposit-svc/internal/data"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/tokend/erc20-deposit-svc/internal/config"
+	"github.com/tokend/erc20-deposit-svc/internal/data/eth"
 	"github.com/tokend/erc20-deposit-svc/internal/services/watchlist"
-	"github.com/tokend/erc20-deposit-svc/internal/services/withdrawer/eth"
 	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/tokend/addrstate"
 )
@@ -23,7 +25,7 @@ type Opts struct {
 
 type Service struct {
 	details         watchlist.Details
-	contract        *Contract
+	contract        *data.Contract
 	log             *logan.Entry
 	addressProvider *addrstate.Watcher
 	eth             *ethclient.Client

@@ -5,7 +5,7 @@ import (
 	"math/big"
 	"reflect"
 
-	"github.com/tokend/erc20-deposit-svc/internal/services/withdrawer/eth"
+	"github.com/tokend/erc20-deposit-svc/internal/data/eth"
 
 	"github.com/ethereum/go-ethereum/common"
 	"gitlab.com/distributed_lab/figure"
@@ -57,7 +57,7 @@ var hooks = figure.Hooks{
 			if err != nil {
 				return reflect.Value{}, errors.Wrap(err, "failed to init keypair")
 			}
-			return reflect.ValueOf(*kp), nil
+			return reflect.ValueOf(kp), nil
 		default:
 			return reflect.Value{}, fmt.Errorf("cant init keypair from type: %T", value)
 		}

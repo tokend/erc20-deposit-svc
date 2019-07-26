@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/tokend/erc20-deposit-svc/internal/services/withdrawer/eth"
+	"github.com/tokend/erc20-deposit-svc/internal/data/eth"
 
 	"gitlab.com/distributed_lab/logan/v3/errors"
 

@@ -3,16 +3,18 @@ package withdrawer
 import (
 	"context"
 
+	"github.com/tokend/erc20-deposit-svc/internal/data"
+
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/tokend/erc20-deposit-svc/internal/services/withdrawer/eth"
+	"github.com/tokend/erc20-deposit-svc/internal/data/eth"
 	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/distributed_lab/logan/v3/errors"
 )
 
 func (s *Service) Run(ctx context.Context) error {
-	token, err := NewERC20(s.details.ERC20.Address, s.eth)
+	token, err := data.NewERC20(s.details.ERC20.Address, s.eth)
 	if err != nil {
 		return errors.Wrap(err, "failed to init token contract", logan.F{
 			"token_address": s.details.ERC20.Address,
@@ -68,11 +70,11 @@ func (s *Service) Run(ctx context.Context) error {
 
 // return deposit contract instance by address, doing some checks.
 // not safe for concurrent use
-func (s *Service) getContract(address common.Address) (*Contract, error) {
+func (s *Service) getContract(address common.Address) (*data.Contract, error) {
 	if s.contract == nil {
-		s.contract = &Contract{}
+		s.contract = &data.Contract{}
 
-		contract, err := NewContract(address, s.eth)
+		contract, err := data.NewContract(address, s.eth)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to init contract")
 		}
@@ -82,7 +84,7 @@ func (s *Service) getContract(address common.Address) (*Contract, error) {
 	return s.contract, nil
 }
 
-func (s *Service) isOwner(contract *Contract) (bool, error) {
+func (s *Service) isOwner(contract *data.Contract) (bool, error) {
 	owner, err := contract.Owner(nil)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to get contract owner")

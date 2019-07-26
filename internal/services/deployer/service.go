@@ -8,6 +8,8 @@ import (
 	"math/big"
 	"time"
 
+	"gitlab.com/distributed_lab/logan/v3/errors"
+
 	regources "gitlab.com/tokend/regources/generated"
 
 	"github.com/spf13/cast"
@@ -21,13 +23,23 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/pkg/errors"
+
 	"github.com/tokend/erc20-deposit-svc/internal/data/eth"
 )
 
 const externalSystemTypeEthereumKey = "external_system_type:ethereum"
 
-func (s *Service) Run(ctx context.Context) error {
+func (s *Service) Run(ctx context.Context) (err error) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer func() {
+		if rvr := recover(); rvr != nil {
+			// we are spending actual ether here,
+			// so in case of emergency abandon the operations completely
+			cancel()
+			err = errors.Wrap(errors.FromPanic(rvr), "service panicked")
+		}
+	}()
+
 	fields := logan.F{}
 	systemType, err := s.getSystemType(externalSystemTypeEthereumKey)
 	if err != nil {

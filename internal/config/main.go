@@ -10,6 +10,7 @@ var ERC20DepositVersion string
 type config struct {
 	depositConfig  DepositConfig
 	ethereumConfig EthereumConfig
+	funnelConfig   comfig.Once
 
 	comfig.Logger
 	getter kv.Getter
@@ -21,6 +22,7 @@ type config struct {
 type Config interface {
 	DepositConfig() DepositConfig
 	EthereumConfig() EthereumConfig
+	FunnelConfig() FunnelConfig
 
 	comfig.Logger
 	Horizoner

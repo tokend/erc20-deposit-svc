@@ -17,3 +17,9 @@ deposit:
 log:
   level: debug
   disable_sentry: true
+
+funnel:
+  gas_price: ""
+  threshold: ""
+  hot_wallet: ""
+  private_key: ""

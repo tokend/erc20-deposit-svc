@@ -3,8 +3,10 @@ package cli
 import (
 	"context"
 	"fmt"
+
 	"github.com/tokend/erc20-deposit-svc/internal/config"
 	"github.com/tokend/erc20-deposit-svc/internal/services/depositer"
+	"github.com/tokend/erc20-deposit-svc/internal/services/funnel"
 	"gitlab.com/distributed_lab/kit/kv"
 	"gitlab.com/distributed_lab/logan/v3"
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -23,6 +25,7 @@ func Run(args []string) bool {
 	app := kingpin.New("erc20-deposit-svc", "")
 	runCmd := app.Command("run", "run command")
 	deposit := runCmd.Command("deposit", "run deposit service")
+	withdraw := runCmd.Command("withdraw", "run withdraw service")
 	versionCmd := app.Command("version", "service revision")
 
 	cmd, err := app.Parse(args[1:])
@@ -37,6 +40,13 @@ func Run(args []string) bool {
 	case deposit.FullCommand():
 		svc := depositer.New(cfg)
 		svc.Run(context.Background())
+	case withdraw.FullCommand():
+		svc := funnel.New(cfg)
+		err := svc.Run(context.Background())
+		if err != nil {
+			log.WithError(err).Error("failed to run withdrawer")
+			return false
+		}
 	case versionCmd.FullCommand():
 		fmt.Println(config.ERC20DepositVersion)
 	default:

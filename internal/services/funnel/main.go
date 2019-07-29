@@ -72,6 +72,15 @@ func New(cfg config.Config) *Service {
 }
 
 func (s *Service) Run(ctx context.Context) error {
+	systemType, err := s.getSystemType(externalSystemTypeEthereumKey)
+	if err != nil {
+		return errors.Wrap(err, "failed to get external system type")
+	}
+	if systemType == nil {
+		return errors.New("no key value for external system type")
+	}
+
+	s.externalSystemType = *systemType
 	mutators := []addrstate.StateMutator{
 		addrstate.ExternalSystemBindingMutator{SystemType: int32(s.externalSystemType)},
 	}
@@ -82,15 +91,6 @@ func (s *Service) Run(ctx context.Context) error {
 	}
 	s.keyPair = keypair
 
-	systemType, err := s.getSystemType(externalSystemTypeEthereumKey)
-	if err != nil {
-		return errors.Wrap(err, "failed to get external system type")
-	}
-	if systemType == nil {
-		return errors.New("no key value for external system type")
-	}
-
-	s.externalSystemType = *systemType
 	addrProvider := addrstate.New(
 		ctx,
 		s.log,

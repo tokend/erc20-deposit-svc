@@ -11,8 +11,8 @@ horizon:
   signer: "G_ASSET_OWNER_SECRET_KEY" # Issuer of assets
 
 deposit:
-  signer: "S_ASSET_OWNER_SECRET_KEY"
-  owner: "G_ASSET_OWNER_ADDRESS"
+  asset_issuer: "S_ASSET_OWNER_SECRET_KEY"
+  asset_owner: "G_ASSET_OWNER_ADDRESS"
 
 log:
   level: debug

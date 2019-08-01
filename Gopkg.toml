@@ -43,9 +43,10 @@
   branch = "master"
   name = "golang.org/x/crypto"
 
-[[constraint]]
+[[override]]
   name = "gitlab.com/tokend/go"
-  version = "3.7.0"
+  branch = "feature/op-manage-external-system-pool-entry"
+
 
 [[constraint]]
   name = "github.com/go-ozzo/ozzo-validation"

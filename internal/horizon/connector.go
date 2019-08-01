@@ -3,9 +3,9 @@ package horizon
 import (
 	"bytes"
 	"encoding/json"
+
 	"github.com/tokend/erc20-deposit-svc/internal/horizon/client"
 	"github.com/tokend/erc20-deposit-svc/internal/horizon/submit"
-
 
 	"gitlab.com/distributed_lab/logan/v3/errors"
 	"gitlab.com/tokend/go/xdrbuild"
@@ -38,7 +38,7 @@ func (c *connector) WithSigner(signer keypair.Full) *connector {
 
 func (c *connector) State() (*regources.HorizonStateResponse, error) {
 	result := &regources.HorizonStateResponse{}
-	respBB, err := c.Get("/v3/")
+	respBB, err := c.Get("/v3/info")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get horizon state")
 	}

@@ -3,6 +3,11 @@ package cli
 import (
 	"context"
 	"fmt"
+
+	"github.com/tokend/erc20-deposit-svc/internal/services/deployer"
+
+	"github.com/tokend/erc20-deposit-svc/internal/services/funnel"
+
 	"github.com/tokend/erc20-deposit-svc/internal/config"
 	"github.com/tokend/erc20-deposit-svc/internal/services/depositer"
 	"gitlab.com/distributed_lab/kit/kv"
@@ -23,6 +28,8 @@ func Run(args []string) bool {
 	app := kingpin.New("erc20-deposit-svc", "")
 	runCmd := app.Command("run", "run command")
 	deposit := runCmd.Command("deposit", "run deposit service")
+	funnelService := runCmd.Command("funnel", "run funnel service")
+	deployerService := runCmd.Command("deployer", "run deployer service")
 	versionCmd := app.Command("version", "service revision")
 
 	cmd, err := app.Parse(args[1:])
@@ -37,6 +44,20 @@ func Run(args []string) bool {
 	case deposit.FullCommand():
 		svc := depositer.New(cfg)
 		svc.Run(context.Background())
+	case funnelService.FullCommand():
+		svc := funnel.New(cfg)
+		err := svc.Run(context.Background())
+		if err != nil {
+			log.WithError(err).Error("failed to run funnel")
+			return false
+		}
+	case deployerService.FullCommand():
+		svc := deployer.New(cfg)
+		err := svc.Run(context.Background())
+		if err != nil {
+			log.WithError(err).Error("failed to run deployer")
+			return false
+		}
 	case versionCmd.FullCommand():
 		fmt.Println(config.ERC20DepositVersion)
 	default:

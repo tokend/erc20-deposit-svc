@@ -11,48 +11,44 @@ type SignerOfExt interface {
 	Check(signer resources.Signer) bool
 }
 
-func SignerOf(address string, ext ...SignerOfExt) SignerConstraint {
+func ClearSignerOf(address string) SignerConstraint {
 	return func(r *http.Request, doorman Doorman) error {
-		signer, err := signcontrol.CheckSignature(r)
-		if err != nil {
-			return err
-		}
-
-		signers, err := doorman.AccountSigners(address)
-		if err != nil {
-			return err
-		}
-
-		for _, accountSigner := range signers {
-			if accountSigner.AccountID == signer && accountSigner.Weight > 0 {
-				return nil
-			}
-
-			if len(ext) == 0 {
-				ext = doorman.DefaultSignerOfConstraints()
-			}
-
-			if checkConstraints(accountSigner, ext) {
-				return nil
-			}
-		}
-		return ErrNotAllowed
+		return signerOf(address, r, doorman)
 	}
 }
 
-func SignatureOf(address string) SignerConstraint {
+// If ext passed - SignerOf overrides default doorman constraints
+func SignerOf(address string, ext ...SignerOfExt) SignerConstraint {
 	return func(r *http.Request, doorman Doorman) error {
-		signer, err := signcontrol.CheckSignature(r)
-		if err != nil {
-			return err
+		if len(ext) == 0 {
+			ext = doorman.DefaultSignerOfConstraints()
 		}
 
-		if signer == address {
+		return signerOf(address, r, doorman, ext...)
+	}
+}
+
+func signerOf(address string, r *http.Request, doorman Doorman, ext ...SignerOfExt) error {
+	signer, err := signcontrol.CheckSignature(r)
+	if err != nil {
+		return err
+	}
+
+	signers, err := doorman.AccountSigners(address)
+	if err != nil {
+		return err
+	}
+
+	for _, accountSigner := range signers {
+		if accountSigner.AccountID == signer && accountSigner.Weight > 0 && checkConstraints(accountSigner, ext) {
 			return nil
 		}
-
-		return ErrNotAllowed
 	}
+	return ErrNotAllowed
+}
+
+func SignatureOf(address string) SignerConstraint {
+	return SignerOf(address)
 }
 
 func checkConstraints(accountSigner resources.Signer, constraints []SignerOfExt) bool {

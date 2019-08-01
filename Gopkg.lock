@@ -43,9 +43,27 @@
   branch = "master"
   digest = "1:7119027008bba31730fcbf27c9b113faf9e73869a49062b2fff35fbb6ed6f31e"
   name = "github.com/btcsuite/btcd"
-  packages = ["btcec"]
+  packages = [
+    "btcec",
+    "chaincfg",
+    "chaincfg/chainhash",
+    "wire",
+  ]
   pruneopts = "T"
   revision = "962a206e94e9151fe41bbd6d6464af4ba7168f50"
+
+[[projects]]
+  branch = "master"
+  digest = "1:8a467668fef7d7e822734dd5b13083b0da468c730f21ecef2092f5d83e69819b"
+  name = "github.com/btcsuite/btcutil"
+  packages = [
+    ".",
+    "base58",
+    "bech32",
+    "hdkeychain",
+  ]
+  pruneopts = "T"
+  revision = "9e5f4b9a998d263e3ce9c56664a7816001ac8000"
 
 [[projects]]
   digest = "1:fed1f537c2f1269fe475a8556c393fe466641682d73ef8fd0491cd3aa1e47bad"
@@ -191,7 +209,10 @@
 [[projects]]
   digest = "1:d7cc16f6f66fd3f5864ff77480288704b02e5263f6f243dae62b43fdf4bb638e"
   name = "github.com/magiconair/properties"
-  packages = ["."]
+  packages = [
+    ".",
+    "assert",
+  ]
   pruneopts = "T"
   revision = "de8848e004dd33dc07a2947b3d76f618a7fc7ef1"
   version = "v1.8.1"
@@ -383,7 +404,8 @@
   revision = "51581e890c177c95575ae44129c54ef1bcd6c70c"
 
 [[projects]]
-  digest = "1:29aff02b2e23f2f76016e1f017aac722c98cd0380a9fbe45cb87d4272911f94f"
+  branch = "feature/op-manage-external-system-pool-entry"
+  digest = "1:85bb49af833a339b7d223e40fcac980c162c702ddd23c97fe534d3dcaad9f597"
   name = "gitlab.com/tokend/go"
   packages = [
     "amount",
@@ -399,8 +421,7 @@
     "xdrbuild/internal",
   ]
   pruneopts = "T"
-  revision = "0b56b8b441982976d9f9bcbbd838e1791cb13fd0"
-  version = "v3.9.0"
+  revision = "58b84195f716cdb41715244d3345fba88c569eb6"
 
 [[projects]]
   digest = "1:0cc74bfe93bf9807f21bd164dcdbe6fe8415f00803ac06fd455d8088fdffc0bf"
@@ -432,6 +453,7 @@
     "ed25519",
     "ed25519/internal/edwards25519",
     "pbkdf2",
+    "ripemd160",
     "scrypt",
     "sha3",
   ]
@@ -501,14 +523,19 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/btcsuite/btcutil/hdkeychain",
     "github.com/ethereum/go-ethereum",
     "github.com/ethereum/go-ethereum/accounts/abi",
     "github.com/ethereum/go-ethereum/accounts/abi/bind",
     "github.com/ethereum/go-ethereum/common",
     "github.com/ethereum/go-ethereum/core/types",
+    "github.com/ethereum/go-ethereum/crypto",
     "github.com/ethereum/go-ethereum/ethclient",
     "github.com/ethereum/go-ethereum/event",
     "github.com/go-ozzo/ozzo-validation",
+    "github.com/magiconair/properties/assert",
+    "github.com/pkg/errors",
+    "github.com/spf13/cast",
     "github.com/stretchr/testify/assert",
     "gitlab.com/distributed_lab/figure",
     "gitlab.com/distributed_lab/kit/comfig",

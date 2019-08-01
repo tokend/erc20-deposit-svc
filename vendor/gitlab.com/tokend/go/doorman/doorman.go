@@ -69,3 +69,11 @@ type RoleConstraint struct {
 func (c *RoleConstraint) Check(signer resources.Signer) bool {
 	return c.RoleID == signer.Role
 }
+
+type RestrictedRoleConstraint struct {
+	RoleID uint64
+}
+
+func (c *RestrictedRoleConstraint) Check(signer resources.Signer) bool {
+	return c.RoleID != signer.Role
+}

@@ -2,9 +2,10 @@ package query
 
 import (
 	"fmt"
-	"github.com/tokend/erc20-deposit-svc/internal/horizon/page"
 	"net/url"
 	"strings"
+
+	"github.com/tokend/erc20-deposit-svc/internal/horizon/page"
 )
 
 func TransactionList() string {

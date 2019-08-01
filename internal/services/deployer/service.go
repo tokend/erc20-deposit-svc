@@ -48,7 +48,11 @@ func (s *Service) Run(ctx context.Context) (err error) {
 	if systemType == nil {
 		return errors.New("no key value for external system type")
 	}
-	for i := 0; i < s.config.DeployerConfig().ContractCount; i++ {
+	deployedEntries, err := s.getExternalSystemPoolEntityCount(*systemType)
+	if err != nil {
+		s.log.WithError(err).Warn("unable to get deployed entries count")
+	}
+	for i := int(deployedEntries); i < s.config.DeployerConfig().ContractCount; i++ {
 		contract, err := s.deployContract()
 		if err != nil {
 			return errors.Wrap(err, "failed to deploy contract")
@@ -137,6 +141,26 @@ func (s *Service) getSystemType(key string) (*uint32, error) {
 		return nil, errors.Wrap(err, "Failed to unmarshal response")
 	}
 	return response.Data.Attributes.Value.U32, nil
+}
+
+// TODO: Use newer endpoint
+func (s *Service) getExternalSystemPoolEntityCount(systemType uint32) (uint64, error) {
+	rawStats, err := s.horizon.Get("/statistics")
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to get system stats")
+	}
+	var stats systemStatistics
+	if err := json.Unmarshal(rawStats, &stats); err != nil {
+		return 0, errors.Wrap(err, "failed to unmarshal system stats")
+	}
+
+	count := stats.ExternalSystemPoolEntriesCount[fmt.Sprintf("%d", systemType)]
+	return count, nil
+}
+
+type systemStatistics struct {
+	// ExternalSystemPoolEntriesCount shows number of active entries per external system type
+	ExternalSystemPoolEntriesCount map[string]uint64 `json:"external_system_pool_entries_count,omitempty"`
 }
 
 func Hash64(msg []byte) uint64 {

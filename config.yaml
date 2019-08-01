@@ -1,34 +1,27 @@
 rpc:
-  endpoint: "ws://ETH_NODE_ADDRESS"
-
+  endpoint: "http://63.32.188.217:18545"
 ethereum:
   checkpoint: #block to start listening for deposits from
   confirmations: 20 #number of confirmations to wait for
-
-
 horizon:
-  endpoint: "SOME_VALID_ADDRESS"
-  signer: "G_ASSET_OWNER_SECRET_KEY" # Issuer of assets
-
-deposit:
-  asset_issuer: "S_ASSET_OWNER_SECRET_KEY"
-  asset_owner: "G_ASSET_OWNER_ADDRESS"
-
+  endpoint: "http://localhost:18080"
+  signer: "SAMJKTZVW5UOHCDK5INYJNORF2HRKYI72M5XSZCBYAHQHR34FFR4Z6G4" # Issuer of assets
 log:
-  level: debug
+  level: info
   disable_sentry: true
-
+deposit:
+  asset_issuer: "SAMJKTZVW5UOHCDK5INYJNORF2HRKYI72M5XSZCBYAHQHR34FFR4Z6G4"
+  asset_owner: "GBA4EX43M25UPV4WIE6RRMQOFTWXZZRIPFAI5VPY6Z2ZVVXVWZ6NEOOB"
 funnel:
-  gas_price: ""
-  threshold: ""
-  hot_wallet: ""
-  private_key: ""
-
+  gas_price: "1"
+  threshold: "1"
+  hot_wallet: "0x9266798B4469275e844C94f747b4e35Dc6aD8D77"
+  private_key: "75603080DAED3924A5544F6815688A2E94F07C89864BFB750D99A8F107B8E3E8"
 deployer:
   private_key: "75603080DAED3924A5544F6815688A2E94F07C89864BFB750D99A8F107B8E3E8"
   gas_price: "20"
   gas_limit: "1200000"
   contract_owner: "0x9266798B4469275e844C94f747b4e35Dc6aD8D77"
   signer: "SAMJKTZVW5UOHCDK5INYJNORF2HRKYI72M5XSZCBYAHQHR34FFR4Z6G4"
-  contract_count: 10
+  contract_count: 1
 

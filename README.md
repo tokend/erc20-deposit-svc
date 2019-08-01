@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/tokend/erc20-deposit-svc.svg?branch=master)](https://travis-ci.org/tokend/erc20-deposit-svc)
+
 # ERC20 Deposit service
 ERC20 deposit service is a bridge between TokenD and Ethereum blockchain which allows 
 to deposit tokens into TokenD from Ethereum blockchain. It listens for token transfers

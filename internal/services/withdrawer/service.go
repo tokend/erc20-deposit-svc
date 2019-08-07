@@ -71,17 +71,12 @@ func (s *Service) Run(ctx context.Context) error {
 // return deposit contract instance by address, doing some checks.
 // not safe for concurrent use
 func (s *Service) getContract(address common.Address) (*data.Contract, error) {
-	if s.contract == nil {
-		s.contract = &data.Contract{}
-
 		contract, err := data.NewContract(address, s.eth)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to init contract")
 		}
-		s.contract = contract
-	}
 
-	return s.contract, nil
+	return contract, nil
 }
 
 func (s *Service) isOwner(contract *data.Contract) (bool, error) {

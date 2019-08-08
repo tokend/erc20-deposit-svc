@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"hash/crc64"
 	"math/big"
+	"strings"
 	"time"
 
 	"gitlab.com/distributed_lab/logan/v3/errors"
@@ -106,7 +107,7 @@ func (s *Service) createPoolEntities(address string, systemType uint32) error {
 	data := EthereumAddress{
 		Type: "address",
 		Data: EthereumAddressData{
-			Address: address,
+			Address: strings.ToLower(address),
 		},
 	}
 	dataBytes, err := json.Marshal(data)

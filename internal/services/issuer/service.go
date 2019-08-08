@@ -4,6 +4,10 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"math/big"
+	"strings"
+	"time"
+
 	"github.com/tokend/erc20-deposit-svc/internal/horizon/submit"
 	"github.com/tokend/erc20-deposit-svc/internal/services/transfer"
 	"gitlab.com/distributed_lab/logan/v3"
@@ -12,9 +16,6 @@ import (
 	"gitlab.com/tokend/addrstate"
 	"gitlab.com/tokend/go/hash"
 	"gitlab.com/tokend/go/xdrbuild"
-	"math/big"
-	"strings"
-	"time"
 )
 
 func (s *Service) prepare(ctx context.Context) {

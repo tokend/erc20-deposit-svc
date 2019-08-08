@@ -1,6 +1,7 @@
 package addrstate
 
 import (
+	"strings"
 	"sync"
 	"time"
 
@@ -86,10 +87,11 @@ func (s *State) Mutate(ts time.Time, update StateUpdate) {
 		switch update.ExternalAccount.State {
 		case ExternalAccountBindingStateCreated:
 			externalType := data.ExternalType
+			key := strings.ToLower(data.Data)
 			if _, ok := s.external[externalType]; !ok {
 				s.external[externalType] = map[string][]externalState{}
 			}
-			s.external[externalType][data.Data] = append(s.external[externalType][data.Data], externalState{
+			s.external[externalType][key] = append(s.external[externalType][key], externalState{
 				State:     data.State,
 				Address:   data.Address,
 				UpdatedAt: ts,
@@ -97,7 +99,7 @@ func (s *State) Mutate(ts time.Time, update StateUpdate) {
 			if _, ok := s.internalExternal[externalType]; !ok {
 				s.internalExternal[externalType] = map[string]string{}
 			}
-			s.internalExternal[externalType][data.Address] = data.Data
+			s.internalExternal[externalType][data.Address] = key
 		case ExternalAccountBindingStateDeleted:
 			externalType := update.ExternalAccount.ExternalType
 			invalidStateErr := errors.From(errors.New("invalid state"), logan.F{

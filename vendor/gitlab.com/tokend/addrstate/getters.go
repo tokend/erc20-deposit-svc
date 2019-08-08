@@ -70,7 +70,7 @@ func (w *Watcher) BindedExternalSystemEntities(ctx context.Context, systemType i
 	entities := w.state.external[systemType]
 	for entity := range entities {
 		var data ExternalData
-		err := json.Unmarshal([]byte(entity), data)
+		err := json.Unmarshal([]byte(entity), &data)
 		if err != nil {
 			w.log.WithError(err).Error("unable to parse external system entity")
 		}

@@ -113,8 +113,13 @@ func (w *Watcher) run(ctx context.Context) {
 					}
 				}
 			}
+
 			// if we made it here it's safe to bump head cursor
-			w.head = txResp.Meta.LatestLedgerCloseTime
+			if len(txs) > 0 {
+				w.head = txs[len(txs) - 1].Attributes.CreatedAt
+			} else {
+				w.head = txResp.Meta.LatestLedgerCloseTime
+			}
 
 			// must be in select to listen new updates.
 			// If not gets all updates before time it was run and then w.headUpdate locks

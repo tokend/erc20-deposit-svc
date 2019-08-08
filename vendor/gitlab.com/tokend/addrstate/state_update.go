@@ -27,7 +27,7 @@ type StateExternalAccountUpdate struct {
 	// ExternalType external system accound id type
 	ExternalType int32
 	// Data external system pool entity data
-	Data ExternalData
+	Data string
 	// Address is a TokenD account address
 	Address string
 	// State shows current external pool entity binding state

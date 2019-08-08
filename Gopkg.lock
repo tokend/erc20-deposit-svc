@@ -397,11 +397,11 @@
 
 [[projects]]
   branch = "feature/v3"
-  digest = "1:e40b171dde5e66368a2da109e8f57e05603dacb1aef9e258651cddce9bc2bee3"
+  digest = "1:9577bf2b88d99684bdd247e9f2b916b21e1c44b99fd1a99d9cd445c121a78e32"
   name = "gitlab.com/tokend/addrstate"
   packages = ["."]
   pruneopts = "T"
-  revision = "51581e890c177c95575ae44129c54ef1bcd6c70c"
+  revision = "7775af498ab03ff59f60b10b8b7df43caa213352"
 
 [[projects]]
   branch = "feature/op-manage-external-system-pool-entry"

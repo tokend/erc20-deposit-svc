@@ -3,6 +3,8 @@ package transaction
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/tokend/erc20-deposit-svc/internal/horizon/getters"
 	"github.com/tokend/erc20-deposit-svc/internal/horizon/page"
 	"github.com/tokend/erc20-deposit-svc/internal/horizon/query"
@@ -10,7 +12,6 @@ import (
 	"gitlab.com/distributed_lab/logan/v3/errors"
 	"gitlab.com/distributed_lab/running"
 	regources "gitlab.com/tokend/regources/generated"
-	"time"
 )
 
 const (
@@ -49,6 +50,23 @@ func (s *Streamer) StreamTransactions(ctx context.Context, changeTypes, entryTyp
 		defer close(txChan)
 		defer close(errChan)
 		txChan <- *txPage
+		ticker := time.NewTicker(5 * time.Second)
+		for {
+			if len(txPage.Data) == 0 {
+				// TODO: Find better way
+				<-ticker.C
+				txPage, err = s.Self()
+			} else {
+				txPage, err = s.Next()
+			}
+			if err != nil {
+				errChan <- err
+				continue
+			}
+			if txPage != nil {
+				txChan <- *txPage
+			}
+		}
 		running.WithBackOff(ctx, logan.New(), "tx-streamer", func(ctx context.Context) error {
 			if len(txPage.Data) == 0 {
 				txPage, err = s.Self()

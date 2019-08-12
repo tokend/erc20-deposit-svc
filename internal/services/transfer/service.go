@@ -60,14 +60,19 @@ func (s *Service) processOld(ctx context.Context) {
 
 func (s *Service) processNew(ctx context.Context) {
 	running.WithBackOff(ctx, s.log, "transfer-streamer", func(ctx context.Context) error {
-		event, ok := <-s.new
-		if !ok {
-			return errors.New("channel closed unexpectedly")
+		select {
+		case event, ok := <-s.new:
+			if !ok {
+				return errors.New("Channel closed unexpectedly")
+			}
+			s.processTransfer(ctx, event)
+		case err := <-s.newSubscription.Err():
+			if err != nil {
+				return errors.Wrap(err, "Subscription returned error")
+			}
 		}
-		s.processTransfer(ctx, event)
-
 		return nil
-	}, time.Second, 10*time.Second, 5*time.Minute)
+	}, time.Second, 20*time.Second, 5*time.Minute)
 }
 
 func (s *Service) processTransfer(ctx context.Context, event types.Log) {
@@ -75,6 +80,7 @@ func (s *Service) processTransfer(ctx context.Context, event types.Log) {
 	err := s.contract.UnpackLog(parsed, "Transfer", event)
 	if err != nil {
 		s.log.WithError(err).Error("failed to unpack log")
+		return
 	}
 	block, err := s.client.BlockByHash(ctx, event.BlockHash)
 	if err != nil {
@@ -82,8 +88,9 @@ func (s *Service) processTransfer(ctx context.Context, event types.Log) {
 			"block_hash":   event.BlockHash.String(),
 			"block_number": event.BlockNumber,
 		}).WithError(err).Error("failed to get block")
+		return
 	}
-	s.log.WithField("amount", parsed.Value).Debug("got event")
+	s.log.WithField("amount", parsed.Value).Info("got event")
 
 	s.ch <- Details{
 		TransactionHash: event.TxHash.String(),

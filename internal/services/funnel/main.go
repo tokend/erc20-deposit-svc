@@ -64,7 +64,7 @@ func New(cfg config.Config) *Service {
 		config:         cfg,
 		assetWatcher:   assetWatcher,
 		log:            cfg.Log(),
-		streamer:       transaction.NewStreamer(getters.NewDefaultTransactionHandler(cfg.Horizon())),
+		streamer:       transaction.NewStreamer(getters.NewDefaultTransactionHandler(cfg.Horizon()), cfg.Log()),
 		eth:            cfg.EthClient(),
 		assetsToAdd:    assetWatcher.GetToAdd(),
 		assetsToRemove: assetWatcher.GetToRemove(),

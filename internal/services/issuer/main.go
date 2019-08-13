@@ -61,6 +61,6 @@ func New(opts Opts) *Service {
 			"asset_code": opts.AssetDetails.ID,
 		}),
 		owner: keypair.MustParseAddress(opts.AssetDetails.Relationships.Owner.Data.ID),
-		ch: opts.Chan,
+		ch:    opts.Chan,
 	}
 }

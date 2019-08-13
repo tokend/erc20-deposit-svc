@@ -3,6 +3,7 @@ package transfer
 import (
 	"context"
 	"strings"
+	"sync"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -17,14 +18,16 @@ const erc20ABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"name\",\"outputs\
 
 //Service respresents transfer listener service
 type Service struct {
-	log             *logan.Entry
-	contract        *bind.BoundContract
-	client          *ethclient.Client
-	cfg             config.EthereumConfig
+	log      *logan.Entry
+	contract *bind.BoundContract
+	client   *ethclient.Client
+	cfg      config.EthereumConfig
 
-	asset           watchlist.Details
+	asset watchlist.Details
 
-	ch       chan Details
+	ch chan Details
+
+	sync.RWMutex
 	decimals uint
 }
 
@@ -63,7 +66,8 @@ func New(opts Opts) *Service {
 		contract: contract,
 		cfg:      opts.Config,
 		ch:       ch,
-		client: &opts.Client,
+		client:   &opts.Client,
+		RWMutex:  sync.RWMutex{},
 	}
 }
 

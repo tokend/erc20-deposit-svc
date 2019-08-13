@@ -98,6 +98,7 @@ func (s *Service) spawn(ctx context.Context, details watchlist.Details) {
 		Log:          s.log,
 		Streamer: transaction.NewStreamer(
 			getters.NewDefaultTransactionHandler(s.config.Horizon()),
+			s.log,
 		),
 		Builder:     s.builder,
 		Signer:      s.config.DepositConfig().AssetIssuer,

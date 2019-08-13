@@ -25,21 +25,24 @@ func (s *Service) Run(ctx context.Context) {
 	if err != nil {
 		s.log.WithError(err).Fatal("failed to prepare transfer listener")
 	}
-	running.WithBackOff(ctx, s.log, "transfer-listener", func(ctx context.Context) error {
-		err := s.processOld(ctx)
+	go running.WithBackOff(ctx, s.log, "old-transfer-listener", func(ctx context.Context) error {
+		err = s.processOld(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to process old transfers")
 		}
 		s.log.Info("Finished streaming old transfers")
+		return nil
+	}, time.Minute, time.Minute, time.Hour)
 
+	go running.WithBackOff(ctx, s.log, "new-transfer-listener", func(ctx context.Context) error {
 		err = s.processNew(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to process new transfers")
 		}
 		s.log.Info("Finished streaming new transfers")
-
 		return nil
 	}, time.Minute, time.Minute, time.Hour)
+
 }
 
 func (s *Service) processOld(ctx context.Context) error {
@@ -110,6 +113,8 @@ runner:
 }
 
 func (s *Service) processTransfer(ctx context.Context, event types.Log) error {
+	s.Lock()
+	defer s.Unlock()
 	parsed := new(ERC20Transfer)
 	err := s.contract.UnpackLog(parsed, "Transfer", event)
 	if err != nil {

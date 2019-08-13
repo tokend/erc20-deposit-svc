@@ -18,6 +18,10 @@ import (
 	"gitlab.com/tokend/go/xdrbuild"
 )
 
+const (
+	taskCheckTxConfirmed uint32 = 2048 // 2^11
+)
+
 func (s *Service) prepare(ctx context.Context) {
 	s.addressProvider = addrstate.New(
 		ctx,
@@ -79,12 +83,14 @@ func (s *Service) processTransfer(ctx context.Context, transfer transfer.Details
 		return nil
 	}
 
+	tasks := taskCheckTxConfirmed
 	envelope, err := s.builder.Transaction(s.owner).Op(xdrbuild.CreateIssuanceRequest{
 		Reference: reference,
 		Asset:     s.asset.ID,
 		Amount:    amountToIssue,
 		Receiver:  *balance,
 		Details:   json.RawMessage(detailsbb),
+		AllTasks:  &tasks,
 	}).Sign(s.issuer).Marshal()
 	if err != nil {
 		return errors.Wrap(err, "failed to craft transaction")
@@ -95,7 +101,7 @@ func (s *Service) processTransfer(ctx context.Context, transfer transfer.Details
 	}
 	s.log.WithFields(logan.F{
 		"amount": amountToIssue,
-	}).Debug("Processed transfer")
+	}).Debug("Successfully submitted issuance")
 	return nil
 }
 

@@ -71,6 +71,10 @@ func (s *Service) confirmIssuanceSuccessful(ctx context.Context, request regourc
 		return errors.Wrap(err, "failed to review request second time", logan.F{"request_id": request.ID})
 	}
 
+	s.log.WithFields(logan.F{
+		"request_id": request.ID,
+	}).Info("Successfully confirmed request")
+
 	return nil
 }
 

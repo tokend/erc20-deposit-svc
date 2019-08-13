@@ -3,15 +3,14 @@ package transaction
 import (
 	"context"
 	"fmt"
-	"time"
-
 	"github.com/tokend/erc20-deposit-svc/internal/horizon/getters"
 	"github.com/tokend/erc20-deposit-svc/internal/horizon/page"
 	"github.com/tokend/erc20-deposit-svc/internal/horizon/query"
 	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/distributed_lab/logan/v3/errors"
 	"gitlab.com/distributed_lab/running"
-	regources "gitlab.com/tokend/regources/generated"
+	"gitlab.com/tokend/regources/generated"
+	"time"
 )
 
 const (
@@ -19,11 +18,15 @@ const (
 )
 
 type Streamer struct {
+	log *logan.Entry
 	getters.TransactionHandler
 }
 
-func NewStreamer(handler getters.TransactionHandler) *Streamer {
-	return &Streamer{handler}
+func NewStreamer(handler getters.TransactionHandler, log *logan.Entry) *Streamer {
+	return &Streamer{
+		log:                log,
+		TransactionHandler: handler,
+	}
 }
 func (s *Streamer) StreamTransactions(ctx context.Context, changeTypes, entryTypes []int,
 ) (<-chan regources.TransactionListResponse, <-chan error) {
@@ -44,15 +47,22 @@ func (s *Streamer) StreamTransactions(ctx context.Context, changeTypes, entryTyp
 	txPage, err := s.List()
 	if err != nil {
 		errChan <- err
-		return nil, nil
+		return txChan, errChan
+	}
+	if txPage == nil {
+		errChan <- errors.New("got nil page")
+		return txChan, errChan
 	}
 	go func() {
-		defer close(txChan)
-		defer close(errChan)
+		defer func() {
+			s.log.Info("Closing channels...")
+			close(txChan)
+			close(errChan)
+		}()
 		txChan <- *txPage
 		ticker := time.NewTicker(5 * time.Second)
-		for {
-			if len(txPage.Data) == 0 {
+		running.WithBackOff(ctx, s.log, "transaction-streamer", func(ctx context.Context) error {
+			if txPage == nil || len(txPage.Data) == 0 {
 				// TODO: Find better way
 				<-ticker.C
 				txPage, err = s.Self()
@@ -61,27 +71,15 @@ func (s *Streamer) StreamTransactions(ctx context.Context, changeTypes, entryTyp
 			}
 			if err != nil {
 				errChan <- err
-				continue
+				return err
 			}
 			if txPage != nil {
 				txChan <- *txPage
-			}
-		}
-		running.WithBackOff(ctx, logan.New(), "tx-streamer", func(ctx context.Context) error {
-			if len(txPage.Data) == 0 {
-				txPage, err = s.Self()
 			} else {
-				txPage, err = s.Next()
-			}
-			if err != nil {
-				errChan <- err
-				return errors.Wrap(err, "error occurred while streaming transactions")
-			}
-			if txPage != nil {
-				txChan <- *txPage
+				s.log.Warn("got nil page")
 			}
 			return nil
-		}, 15*time.Second, 15*time.Second, 5*time.Minute)
+		}, time.Second, 2*time.Second, 10*time.Second)
 	}()
 
 	return txChan, errChan

@@ -2,6 +2,7 @@ package transfer
 
 import (
 	"context"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"gitlab.com/distributed_lab/logan/v3"
@@ -24,73 +25,120 @@ func (s *Service) Run(ctx context.Context) {
 	if err != nil {
 		s.log.WithError(err).Fatal("failed to prepare transfer listener")
 	}
-	s.processOld(ctx)
-	s.log.Info("Finished streaming old transfers")
-	s.processNew(ctx)
-	s.log.Info("Finished streaming new transfers")
-	s.oldSubscription.Unsubscribe()
-	s.newSubscription.Unsubscribe()
-}
-
-func (s *Service) processOld(ctx context.Context) {
-	running.UntilSuccess(ctx, s.log, "old-transfer-streamer", func(ctx context.Context) (bool, error) {
-	runner:
-		for {
-			if len(s.old) == 0 {
-				break runner
-			}
-
-			select {
-			case event, ok := <-s.old:
-				if !ok {
-					break runner
-				}
-				s.processTransfer(ctx, event)
-			case err := <-s.oldSubscription.Err():
-				if err != nil {
-					s.log.WithError(err).Warn("got error from subscription")
-				}
-			case <-ctx.Done():
-				break runner
-			}
+	running.WithBackOff(ctx, s.log, "transfer-listener", func(ctx context.Context) error {
+		err := s.processOld(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to process old transfers")
 		}
-		return true, nil
-	}, time.Minute, time.Hour)
-}
+		s.log.Info("Finished streaming old transfers")
 
-func (s *Service) processNew(ctx context.Context) {
-	running.WithBackOff(ctx, s.log, "transfer-streamer", func(ctx context.Context) error {
-		select {
-		case event, ok := <-s.new:
-			if !ok {
-				return errors.New("Channel closed unexpectedly")
-			}
-			s.processTransfer(ctx, event)
-		case err := <-s.newSubscription.Err():
-			if err != nil {
-				return errors.Wrap(err, "Subscription returned error")
-			}
+		err = s.processNew(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to process new transfers")
 		}
+		s.log.Info("Finished streaming new transfers")
+
 		return nil
-	}, time.Second, 20*time.Second, 5*time.Minute)
+	}, time.Minute, time.Minute, time.Hour)
 }
 
-func (s *Service) processTransfer(ctx context.Context, event types.Log) {
+func (s *Service) processOld(ctx context.Context) error {
+	oldCh, oldSubscription, err := s.contract.FilterLogs(
+		&bind.FilterOpts{
+			Context: ctx,
+			Start:   s.cfg.Checkpoint,
+		}, "Transfer")
+	if err != nil {
+		return errors.Wrap(err, "failed to subscribe to old logs")
+	}
+	defer oldSubscription.Unsubscribe()
+
+runner:
+	for {
+		if len(oldCh) == 0 {
+			break runner
+		}
+
+		select {
+		case event, ok := <-oldCh:
+			if !ok {
+				break runner
+			}
+			err = s.processTransfer(ctx, event)
+			if err != nil {
+				return errors.Wrap(err, "failed to process transfer")
+			}
+		case err := <-oldSubscription.Err():
+			if err != nil {
+				return errors.Wrap(err, "got error from subscription")
+			}
+		case <-ctx.Done():
+			break runner
+		}
+	}
+	return nil
+}
+
+func (s *Service) processNew(ctx context.Context) error {
+	newCh, newSubscription, err := s.contract.WatchLogs(
+		&bind.WatchOpts{
+			Context: ctx,
+		}, "Transfer")
+	if err != nil {
+		s.log.WithError(err).Error("failed to subscribe to new logs")
+	}
+
+	defer newSubscription.Unsubscribe()
+runner:
+	for {
+		if len(newCh) == 0 {
+			break runner
+		}
+
+		select {
+		case event, ok := <-newCh:
+			if !ok {
+				return errors.New("channel closed unexpectedly")
+			}
+			err = s.processTransfer(ctx, event)
+			if err != nil {
+				return errors.Wrap(err, "failed to process transfer")
+			}
+
+		case err := <-newSubscription.Err():
+			if err != nil {
+				return errors.Wrap(err, "subscription returned error")
+			}
+		case <-ctx.Done():
+			break runner
+		}
+	}
+
+	return nil
+}
+
+func (s *Service) processTransfer(ctx context.Context, event types.Log) error {
 	parsed := new(ERC20Transfer)
 	err := s.contract.UnpackLog(parsed, "Transfer", event)
 	if err != nil {
-		s.log.WithError(err).Error("failed to unpack log")
-		return
+		return errors.Wrap(err, "failed to unpack log", logan.F{
+			"event_data":   event.Data,
+			"event_topics": event.Topics,
+		})
 	}
+
 	block, err := s.client.BlockByHash(ctx, event.BlockHash)
 	if err != nil {
-		s.log.WithFields(logan.F{
+		return errors.Wrap(err, "failed to get block", logan.F{
 			"block_hash":   event.BlockHash.String(),
 			"block_number": event.BlockNumber,
-		}).WithError(err).Error("failed to get block")
-		return
+		})
 	}
-	s.log.WithField("amount", parsed.Value).Info("got event")
+	s.log.WithFields(logan.F{
+		"amount":       parsed.Value,
+		"tx_hash":      event.TxHash.String(),
+		"block_number": event.BlockNumber,
+	}).Info("Got transfer")
 
 	s.ch <- Details{
 		TransactionHash: event.TxHash.String(),
@@ -99,4 +147,6 @@ func (s *Service) processTransfer(ctx context.Context, event types.Log) {
 		Decimals:        int64(s.decimals),
 		BlockTime:       time.Unix(int64(block.Time()), 0),
 	}
+
+	return nil
 }

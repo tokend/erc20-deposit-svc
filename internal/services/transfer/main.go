@@ -6,9 +6,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/ethereum/go-ethereum/event"
 	"github.com/tokend/erc20-deposit-svc/internal/config"
 	"github.com/tokend/erc20-deposit-svc/internal/services/watchlist"
 	"gitlab.com/distributed_lab/logan/v3"
@@ -23,11 +21,7 @@ type Service struct {
 	contract        *bind.BoundContract
 	client          *ethclient.Client
 	cfg             config.EthereumConfig
-	old             chan types.Log
-	oldSubscription event.Subscription
 
-	new             chan types.Log
-	newSubscription event.Subscription
 	asset           watchlist.Details
 
 	ch       chan Details
@@ -74,32 +68,8 @@ func New(opts Opts) *Service {
 }
 
 func (s *Service) prepare(ctx context.Context) error {
-	oldCh, oldSubscription, err := s.contract.FilterLogs(
-		&bind.FilterOpts{
-			Context: ctx,
-			Start:   s.cfg.Checkpoint,
-
-		}, "Transfer")
-
-	if err != nil {
-		return errors.Wrap(err, "failed to subscribe to old logs")
-	}
-	s.old = oldCh
-	s.oldSubscription = oldSubscription
-
-	newCh, newSubscription, err := s.contract.WatchLogs(
-		&bind.WatchOpts{
-			Context: ctx,
-		}, "Transfer")
-
-	if err != nil {
-		return errors.Wrap(err, "failed to subscribe to new logs")
-	}
-	s.new = newCh
-	s.newSubscription = newSubscription
-
 	decimals := new(uint8)
-	err = s.contract.Call(&bind.CallOpts{Context: ctx}, decimals, "decimals")
+	err := s.contract.Call(&bind.CallOpts{Context: ctx}, decimals, "decimals")
 	if err != nil {
 		return errors.Wrap(err, "failed to get decimals")
 	}

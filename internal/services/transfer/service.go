@@ -55,10 +55,6 @@ func (s *Service) processOld(ctx context.Context) error {
 
 runner:
 	for {
-		if len(oldCh) == 0 {
-			break runner
-		}
-
 		select {
 		case event, ok := <-oldCh:
 			if !ok {
@@ -91,10 +87,6 @@ func (s *Service) processNew(ctx context.Context) error {
 	defer newSubscription.Unsubscribe()
 runner:
 	for {
-		if len(newCh) == 0 {
-			break runner
-		}
-
 		select {
 		case event, ok := <-newCh:
 			if !ok {

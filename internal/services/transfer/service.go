@@ -131,11 +131,6 @@ func (s *Service) processTransfer(ctx context.Context, event types.Log) error {
 			"block_number": event.BlockNumber,
 		})
 	}
-	s.log.WithFields(logan.F{
-		"amount":       parsed.Value,
-		"tx_hash":      event.TxHash.String(),
-		"block_number": event.BlockNumber,
-	}).Info("Got transfer")
 
 	s.ch <- Details{
 		TransactionHash: event.TxHash.String(),

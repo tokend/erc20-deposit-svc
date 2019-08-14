@@ -54,11 +54,21 @@ func (s *Service) processTransfer(ctx context.Context, transfer transfer.Details
 	if address == nil {
 		return nil
 	}
+
+	fields := logan.F{
+		"token_amount": transfer.Amount,
+		"tx_hash":      transfer.TransactionHash,
+		"destination":  destination,
+		"asset":        s.asset.ID,
+		"address":      address,
+	}
+
 	balance := s.addressProvider.Balance(ctx, *address, s.asset.ID)
 	if balance == nil {
-		s.log.Debug("Unable to find valid balance to issue tokens to")
+		s.log.WithFields(fields).Warn("Unable to find valid balance to issue tokens to")
 		return nil
 	}
+	fields["balance"] = balance
 
 	issueDetails := details{
 		TxHash:      transfer.TransactionHash,
@@ -74,14 +84,11 @@ func (s *Service) processTransfer(ctx context.Context, transfer transfer.Details
 	reference := hex.EncodeToString(refHash[:])
 
 	amountToIssue := amountToIssue(transfer.Amount, transfer.Decimals, int64(s.asset.Attributes.TrailingDigits))
-
 	if amountToIssue == 0 {
-		s.log.WithFields(logan.F{
-			"amount":      transfer.Amount.String(),
-			"transaction": transfer.TransactionHash,
-		}).Warn("amount to issue is too small")
+		s.log.WithFields(fields).Warn("amount to issue is too small")
 		return nil
 	}
+	fields["amount"] = amountToIssue
 
 	tasks := taskCheckTxConfirmed
 	envelope, err := s.builder.Transaction(s.owner).Op(xdrbuild.CreateIssuanceRequest{
@@ -99,9 +106,7 @@ func (s *Service) processTransfer(ctx context.Context, transfer transfer.Details
 	if err != nil {
 		return errors.Wrap(err, "failed to submit issuance tx")
 	}
-	s.log.WithFields(logan.F{
-		"amount": amountToIssue,
-	}).Debug("Successfully submitted issuance")
+	s.log.WithFields(fields).Info("Successfully submitted issuance")
 	return nil
 }
 

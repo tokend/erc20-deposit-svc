@@ -1,6 +1,7 @@
 package withdrawer
 
 import (
+	"github.com/tokend/erc20-deposit-svc/internal/data"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -31,6 +32,7 @@ type Service struct {
 	gasPrice        *big.Int
 	threshold       *big.Int
 	systemType      uint32
+	contracts       map[string]data.Contract
 }
 
 func NewWithdrawer(opts Opts) *Service {

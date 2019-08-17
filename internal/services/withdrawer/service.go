@@ -71,10 +71,20 @@ func (s *Service) Run(ctx context.Context) error {
 // return deposit contract instance by address, doing some checks.
 // not safe for concurrent use
 func (s *Service) getContract(address common.Address) (*data.Contract, error) {
-		contract, err := data.NewContract(address, s.eth)
+	if s.contracts == nil {
+		s.contracts = map[string]data.Contract{}
+	}
+
+	if contract, ok := s.contracts[address.Hex()]; ok {
+		return &contract, nil
+	}
+
+	contract, err := data.NewContract(address, s.eth)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to init contract")
 		}
+
+	s.contracts[address.Hex()] = *contract
 
 	return contract, nil
 }

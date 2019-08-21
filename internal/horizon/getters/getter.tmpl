@@ -101,7 +101,9 @@ func (g *defaultResourceHandler) List() (*regources.TemplateListResponse, error)
 			"query_params": g.params,
 		})
 	}
-    g.currentPageLinks = result.Links
+    if result.Links != nil {
+        g.currentPageLinks = result.Links
+    }
 	return result, nil
 }
 
@@ -121,7 +123,9 @@ func (g *defaultResourceHandler) Next() (*regources.TemplateListResponse, error)
 			"link": g.currentPageLinks.Next,
 		})
 	}
-    g.currentPageLinks = result.Links
+    if result.Links != nil {
+        g.currentPageLinks = result.Links
+    }
 
 	return result, nil
 }
@@ -143,7 +147,9 @@ func (g *defaultResourceHandler) Prev() (*regources.TemplateListResponse, error)
 			"link": g.currentPageLinks.Prev,
 		})
 	}
-	g.currentPageLinks = result.Links
+	if result.Links != nil {
+	    g.currentPageLinks = result.Links
+	}
 
 
 	return result, nil
@@ -165,7 +171,9 @@ func (g *defaultResourceHandler) Self() (*regources.TemplateListResponse, error)
 			"link": g.currentPageLinks.Self,
 		})
 	}
-	g.currentPageLinks = result.Links
+	if result.Links != nil {
+	    g.currentPageLinks = result.Links
+	}
 
 	return result, nil
 }
@@ -186,7 +194,9 @@ func (g *defaultResourceHandler) First() (*regources.TemplateListResponse, error
 			"link": g.currentPageLinks.First,
 		})
 	}
-	g.currentPageLinks = result.Links
+	if result.Links != nil {
+	    g.currentPageLinks = result.Links
+	}
 
 	return result, nil
 }

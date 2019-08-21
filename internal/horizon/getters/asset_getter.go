@@ -8,7 +8,7 @@ import (
 	"github.com/tokend/erc20-deposit-svc/internal/horizon/client"
 	"github.com/tokend/erc20-deposit-svc/internal/horizon/page"
 	"github.com/tokend/erc20-deposit-svc/internal/horizon/query"
-	"gitlab.com/distributed_lab/logan/v3"
+	"gitlab.com/distributed_lab/logan"
 	"gitlab.com/distributed_lab/logan/v3/errors"
 	regources "gitlab.com/tokend/regources/generated"
 )
@@ -103,7 +103,9 @@ func (g *defaultAssetHandler) List() (*regources.AssetListResponse, error) {
 			"query_params": g.params,
 		})
 	}
-	g.currentPageLinks = result.Links
+	if result.Links != nil {
+		g.currentPageLinks = result.Links
+	}
 	return result, nil
 }
 
@@ -123,7 +125,9 @@ func (g *defaultAssetHandler) Next() (*regources.AssetListResponse, error) {
 			"link": g.currentPageLinks.Next,
 		})
 	}
-	g.currentPageLinks = result.Links
+	if result.Links != nil {
+		g.currentPageLinks = result.Links
+	}
 
 	return result, nil
 }
@@ -145,7 +149,9 @@ func (g *defaultAssetHandler) Prev() (*regources.AssetListResponse, error) {
 			"link": g.currentPageLinks.Prev,
 		})
 	}
-	g.currentPageLinks = result.Links
+	if result.Links != nil {
+		g.currentPageLinks = result.Links
+	}
 
 	return result, nil
 }
@@ -166,7 +172,9 @@ func (g *defaultAssetHandler) Self() (*regources.AssetListResponse, error) {
 			"link": g.currentPageLinks.Self,
 		})
 	}
-	g.currentPageLinks = result.Links
+	if result.Links != nil {
+		g.currentPageLinks = result.Links
+	}
 
 	return result, nil
 }
@@ -187,7 +195,9 @@ func (g *defaultAssetHandler) First() (*regources.AssetListResponse, error) {
 			"link": g.currentPageLinks.First,
 		})
 	}
-	g.currentPageLinks = result.Links
+	if result.Links != nil {
+		g.currentPageLinks = result.Links
+	}
 
 	return result, nil
 }

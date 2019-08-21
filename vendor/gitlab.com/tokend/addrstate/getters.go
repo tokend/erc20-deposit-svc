@@ -95,6 +95,7 @@ func (w *Watcher) KYCData(ctx context.Context, address string) *string {
 
 func (w *Watcher) Balance(ctx context.Context, address string, asset string) *string {
 	w.state.RLock()
+	defer w.state.RUnlock()
 
 	// let's hope for the best and try to get balance before reaching head
 	if w.state.balances[address] != nil {
@@ -109,7 +110,6 @@ func (w *Watcher) Balance(ctx context.Context, address string, asset string) *st
 	w.ensureReached(ctx, time.Now())
 
 	w.state.RLock()
-	defer w.state.RUnlock()
 
 	// now check again
 	if w.state.balances[address] != nil {

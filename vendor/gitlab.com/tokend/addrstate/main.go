@@ -129,6 +129,8 @@ func (w *Watcher) run(ctx context.Context) {
 			}
 		case err := <-txStreamErrs:
 			w.log.WithError(err).Warn("TXStreamer sent error into channel.")
+		case <-ctx.Done():
+			return
 		}
 	}
 }

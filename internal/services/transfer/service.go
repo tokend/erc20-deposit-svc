@@ -113,6 +113,9 @@ runner:
 }
 
 func (s *Service) processTransfer(ctx context.Context, event types.Log) error {
+	if event.Removed {
+		return nil
+	}
 	s.Lock()
 	defer s.Unlock()
 	parsed := new(ERC20Transfer)

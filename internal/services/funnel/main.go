@@ -144,7 +144,7 @@ func (s *Service) spawn(ctx context.Context, details watchlist.Details) {
 		})
 
 	s.log.WithField("asset", details.ID).Info("Started listening for deposits")
-	running.WithBackOff(localCtx, s.log, "withdrawer-service", withdrawer.Run, time.Second, 10*time.Second, 5*time.Minute)
+	go running.WithBackOff(localCtx, s.log, "withdrawer-service", withdrawer.Run, time.Second, 10*time.Second, 5*time.Minute)
 }
 
 func (s *Service) getSystemType(key string) (*uint32, error) {

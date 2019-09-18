@@ -2,12 +2,14 @@ package depositer
 
 import (
 	"context"
+	"sync"
+
 	"github.com/tokend/erc20-deposit-svc/internal/config"
 	"github.com/tokend/erc20-deposit-svc/internal/horizon/submit"
 	"github.com/tokend/erc20-deposit-svc/internal/services/issuer"
 	"github.com/tokend/erc20-deposit-svc/internal/services/verifier"
 	"github.com/tokend/erc20-deposit-svc/internal/transaction"
-	"sync"
+	"gitlab.com/tokend/keypair"
 
 	"github.com/tokend/erc20-deposit-svc/internal/horizon"
 	"github.com/tokend/erc20-deposit-svc/internal/horizon/getters"
@@ -22,6 +24,7 @@ type Service struct {
 	log            *logan.Entry
 	config         config.Config
 	builder        xdrbuild.Builder
+	adminID        keypair.Address
 	spawned        sync.Map
 	assetsToAdd    <-chan watchlist.Details
 	assetsToRemove <-chan string
@@ -31,19 +34,26 @@ type Service struct {
 //New creates new depositer service that gathers asset watcher, issuer and transfer listener
 func New(cfg config.Config) *Service {
 	assetWatcher := watchlist.New(watchlist.Opts{
-		AssetOwner: cfg.DepositConfig().AssetOwner.Address(),
-		Streamer:   getters.NewDefaultAssetHandler(cfg.Horizon()),
-		Log:        cfg.Log(),
+		Streamer: getters.NewDefaultAssetHandler(cfg.Horizon()),
+		Log:      cfg.Log(),
 	})
-	builder, err := horizon.NewConnector(cfg.Horizon()).Builder()
+
+	connector := horizon.NewConnector(cfg.Horizon())
+	builder, err := connector.Builder()
 	if err != nil {
 		cfg.Log().WithError(err).Fatal("failed to make builder")
+	}
+
+	horizonInfo, err := connector.State()
+	if err != nil {
+		cfg.Log().WithError(err).Fatal("failed to get state from connector")
 	}
 
 	return &Service{
 		log:     cfg.Log(),
 		config:  cfg,
 		builder: *builder,
+		adminID: keypair.MustParseAddress(horizonInfo.Data.Attributes.MasterAccountId),
 
 		assetWatcher:   assetWatcher,
 		assetsToAdd:    assetWatcher.GetToAdd(),
@@ -101,7 +111,7 @@ func (s *Service) spawn(ctx context.Context, details watchlist.Details) {
 			s.log,
 		),
 		Builder:     s.builder,
-		Signer:      s.config.DepositConfig().AssetIssuer,
+		Signer:      s.config.DepositConfig().AdminSigner,
 		TxSubmitter: submit.New(s.config.Horizon()),
 		Chan:        transfers,
 	})
@@ -112,6 +122,7 @@ func (s *Service) spawn(ctx context.Context, details watchlist.Details) {
 		Submitter: submit.New(s.config.Horizon()),
 		Client:    *s.config.EthClient(),
 		Asset:     details,
+		AdminID:   s.adminID,
 
 		Streamer: getters.NewDefaultCreateIssuanceRequestHandler(s.config.Horizon()),
 	})

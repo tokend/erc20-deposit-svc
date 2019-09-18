@@ -3,12 +3,13 @@ package verifier
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/tokend/erc20-deposit-svc/internal/horizon/page"
 	"github.com/tokend/erc20-deposit-svc/internal/horizon/query"
 	"gitlab.com/distributed_lab/logan/v3/errors"
 	"gitlab.com/distributed_lab/running"
 	regources "gitlab.com/tokend/regources/generated"
-	"time"
 )
 
 func (s *Service) Run(ctx context.Context) {
@@ -40,16 +41,15 @@ func (s *Service) Run(ctx context.Context) {
 }
 
 func (s *Service) prepare() {
-
 	state := reviewableRequestStatePending
-	reviewer := s.depositCfg.AssetOwner.Address()
-	pendingTasks := fmt.Sprintf("%d",taskCheckTxConfirmed )
+	reviewer := s.adminID.Address()
+	pendingTasks := fmt.Sprintf("%d", taskCheckTxConfirmed)
 	filters := query.CreateIssuanceRequestFilters{
 		Asset: &s.asset.ID,
 		ReviewableRequestFilters: query.ReviewableRequestFilters{
-			State:              &state,
-			Reviewer:           &reviewer,
-			PendingTasks:       &pendingTasks,
+			State:        &state,
+			Reviewer:     &reviewer,
+			PendingTasks: &pendingTasks,
 		},
 	}
 

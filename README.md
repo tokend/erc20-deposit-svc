@@ -7,7 +7,7 @@ specific addresses.
 
 ## Usage
 
-Enviromental variable `KV_VIPER_FILE` must be set and contain path to desired config file.
+Environmental variable `KV_VIPER_FILE` must be set and contain path to desired config file.
 
 ```bash
 erc20-deposit-svc run withdraw
@@ -39,11 +39,10 @@ ethereum:
 
 horizon:
   endpoint: "SOME_VALID_ADDRESS"
-  signer: "G_ASSET_OWNER_SECRET_KEY" # Issuer of assets
+  signer: "S_ASSET_OWNER_SECRET_KEY" # only for requests
 
 deposit:
-  signer: "S_ASSET_OWNER_SECRET_KEY"
-  owner: "G_ASSET_OWNER_ADDRESS"
+  admin_signer: "S_ASSET_OWNER_SIGNER_SECRET_KEY" # used for signing transactions
 
 log:
   level: debug
@@ -51,6 +50,7 @@ log:
 
 ```
 
+Just add public key of `deposit: admin_signer` as signer to corporate account for issuance
 
 ## Ethereum node
 

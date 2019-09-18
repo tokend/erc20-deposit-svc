@@ -3,11 +3,12 @@ package verifier
 import (
 	"context"
 	"encoding/json"
+	"strconv"
+
 	"gitlab.com/distributed_lab/logan/v3/errors"
 	"gitlab.com/tokend/go/xdr"
 	"gitlab.com/tokend/go/xdrbuild"
 	regources "gitlab.com/tokend/regources/generated"
-	"strconv"
 )
 
 func (s *Service) approveRequest(
@@ -23,7 +24,7 @@ func (s *Service) approveRequest(
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal external details")
 	}
-	envelope, err := s.builder.Transaction(s.depositCfg.AssetOwner).Op(xdrbuild.ReviewRequest{
+	envelope, err := s.builder.Transaction(s.adminID).Op(xdrbuild.ReviewRequest{
 		ID:     id,
 		Hash:   &request.Attributes.Hash,
 		Action: xdr.ReviewRequestOpActionApprove,
@@ -33,7 +34,7 @@ func (s *Service) approveRequest(
 			ExternalDetails: string(bb),
 		},
 		Details: xdrbuild.IssuanceDetails{},
-	}).Sign(s.depositCfg.AssetIssuer).Marshal()
+	}).Sign(s.depositCfg.AdminSigner).Marshal()
 	if err != nil {
 		return errors.Wrap(err, "failed to prepare transaction envelope")
 	}
@@ -52,7 +53,7 @@ func (s *Service) permanentReject(
 	if err != nil {
 		return errors.Wrap(err, "failed to parse request id")
 	}
-	envelope, err := s.builder.Transaction(s.depositCfg.AssetOwner).Op(xdrbuild.ReviewRequest{
+	envelope, err := s.builder.Transaction(s.adminID).Op(xdrbuild.ReviewRequest{
 		ID:     id,
 		Hash:   &request.Attributes.Hash,
 		Action: xdr.ReviewRequestOpActionPermanentReject,
@@ -61,7 +62,7 @@ func (s *Service) permanentReject(
 			ExternalDetails: "{}",
 		},
 		Details: xdrbuild.IssuanceDetails{},
-	}).Sign(s.depositCfg.AssetIssuer).Marshal()
+	}).Sign(s.depositCfg.AdminSigner).Marshal()
 	if err != nil {
 		return errors.Wrap(err, "failed to prepare transaction envelope")
 	}

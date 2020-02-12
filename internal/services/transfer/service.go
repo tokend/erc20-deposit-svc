@@ -84,7 +84,7 @@ func (s *Service) processNew(ctx context.Context) error {
 			Context: ctx,
 		}, "Transfer")
 	if err != nil {
-		s.log.WithError(err).Error("failed to subscribe to new logs")
+		return errors.Wrap(err, "failed to subscribe to new logs")
 	}
 
 	defer newSubscription.Unsubscribe()

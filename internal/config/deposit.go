@@ -9,8 +9,7 @@ import (
 )
 
 type DepositConfig struct {
-	AssetOwner  keypair.Address `fig:"asset_owner"`
-	AssetIssuer keypair.Full    `fig:"asset_issuer"`
+	AdminSigner keypair.Full `fig:"admin_signer"`
 }
 
 func (c *config) DepositConfig() DepositConfig {

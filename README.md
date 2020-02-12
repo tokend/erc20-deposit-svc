@@ -7,7 +7,7 @@ specific addresses.
 
 ## Usage
 
-Enviromental variable `KV_VIPER_FILE` must be set and contain path to desired config file.
+Environmental variable `KV_VIPER_FILE` must be set and contain path to desired config file.
 
 ```bash
 erc20-deposit-svc run withdraw
@@ -39,11 +39,10 @@ ethereum:
 
 horizon:
   endpoint: "SOME_VALID_ADDRESS"
-  signer: "G_ASSET_OWNER_SECRET_KEY" # Issuer of assets
+  signer: "S_ASSET_OWNER_SECRET_KEY" # only for requests
 
 deposit:
-  signer: "S_ASSET_OWNER_SECRET_KEY"
-  owner: "G_ASSET_OWNER_ADDRESS"
+  admin_signer: "S_ASSET_OWNER_SIGNER_SECRET_KEY" # used for signing transactions
 
 log:
   level: debug
@@ -51,9 +50,22 @@ log:
 
 ```
 
+Just add public key of `deposit: admin_signer` as signer to corporate account for issuance
 
 ## Ethereum node
 
 Node must be configured to accept connections through websockets. 
 Origin must be explicitly or implicitly whitelisted:
 either `--wsorigins "some_origin"`, or `--wsorigins *` to accept all connections.
+WS APIs `eth` and `web3` must be enabled as well.
+Do not forget to forward ports.
+
+Example startup command for Docker image:
+
+```bash
+docker run -dit -p 0.0.0.0:8080:8080 -p 0.0.0.0:30303:30303 -p 0.0.0.0:8545:8545 -p 0.0.0.0:8546:8546 \
+--name <preferred_container_name> -v <path_to_volume>:/root/.ethereum ethereum/client-go:stable \
+--datadir "/root/.ethereum/data" \
+--rpc --rpcaddr '0.0.0.0' --rpcapi "eth, web3" \
+--ws --wsapi "eth, web3" --wsaddr '0.0.0.0' --wsorigins="*"
+```

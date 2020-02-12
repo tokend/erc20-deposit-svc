@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/tokend/erc20-deposit-svc/internal/horizon/query"
 	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/distributed_lab/logan/v3/errors"
 	"gitlab.com/distributed_lab/running"
@@ -60,13 +59,9 @@ func (s *Service) processAllAssetsOnce(ctx context.Context) error {
 }
 
 func (s *Service) getWatchList() ([]Details, error) {
-	s.streamer.SetFilters(query.AssetFilters{Owner: &s.owner})
-
 	assetsResponse, err := s.streamer.List()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get asset list for owner", logan.F{
-			"owner_address": s.owner,
-		})
+		return nil, errors.Wrap(err, "failed to get asset list")
 	}
 
 	watchList, err := s.filter(assetsResponse.Data)

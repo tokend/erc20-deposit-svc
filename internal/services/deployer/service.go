@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/tokend/erc20-deposit-svc/internal/horizon/submit"
 	"hash/crc64"
 	"math/big"
 	"strings"
@@ -122,11 +123,13 @@ func (s *Service) createPoolEntities(address string, systemType uint32) error {
 		return errors.Wrap(err, "failed to marshal tx")
 	}
 
-	result, err := s.submitter.Submit(context.TODO(), envelope, true)
+	_, err = s.submitter.Submit(context.TODO(), envelope, true)
 	if err != nil {
-		body, _ := json.Marshal(result)
-		s.log.Error(string(body))
-		return errors.Wrap(err, "failed to submit tx")
+		fields := make(logan.F, 1)
+		if fail, ok := err.(submit.TxFailure); ok {
+			fields["tx"] = fail
+		}
+		return errors.Wrap(err, "failed to submit tx", fields)
 	}
 
 	return nil

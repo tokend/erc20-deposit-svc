@@ -22,8 +22,6 @@ import (
 	"io"
 	"sort"
 
-	"strings"
-
 	"github.com/ethereum/go-ethereum/cmd/utils"
 	"github.com/ethereum/go-ethereum/internal/debug"
 	cli "gopkg.in/urfave/cli.v1"
@@ -82,12 +80,20 @@ var AppHelpFlagGroups = []flagGroup{
 			utils.GCModeFlag,
 			utils.EthStatsURLFlag,
 			utils.IdentityFlag,
-			utils.LightServFlag,
-			utils.LightBandwidthInFlag,
-			utils.LightBandwidthOutFlag,
-			utils.LightPeersFlag,
 			utils.LightKDFFlag,
 			utils.WhitelistFlag,
+		},
+	},
+	{
+		Name: "LIGHT CLIENT",
+		Flags: []cli.Flag{
+			utils.LightServeFlag,
+			utils.LightIngressFlag,
+			utils.LightEgressFlag,
+			utils.LightMaxPeersFlag,
+			utils.UltraLightServersFlag,
+			utils.UltraLightFractionFlag,
+			utils.UltraLightOnlyAnnounceFlag,
 		},
 	},
 	{
@@ -108,16 +114,6 @@ var AppHelpFlagGroups = []flagGroup{
 			utils.EthashDatasetsOnDiskFlag,
 		},
 	},
-	//{
-	//	Name: "DASHBOARD",
-	//	Flags: []cli.Flag{
-	//		utils.DashboardEnabledFlag,
-	//		utils.DashboardAddrFlag,
-	//		utils.DashboardPortFlag,
-	//		utils.DashboardRefreshFlag,
-	//		utils.DashboardAssetsFlag,
-	//	},
-	//},
 	{
 		Name: "TRANSACTION POOL",
 		Flags: []cli.Flag{
@@ -156,20 +152,25 @@ var AppHelpFlagGroups = []flagGroup{
 	{
 		Name: "API AND CONSOLE",
 		Flags: []cli.Flag{
+			utils.IPCDisabledFlag,
+			utils.IPCPathFlag,
 			utils.RPCEnabledFlag,
 			utils.RPCListenAddrFlag,
 			utils.RPCPortFlag,
 			utils.RPCApiFlag,
 			utils.RPCGlobalGasCap,
+			utils.RPCCORSDomainFlag,
+			utils.RPCVirtualHostsFlag,
 			utils.WSEnabledFlag,
 			utils.WSListenAddrFlag,
 			utils.WSPortFlag,
 			utils.WSApiFlag,
 			utils.WSAllowedOriginsFlag,
-			utils.IPCDisabledFlag,
-			utils.IPCPathFlag,
-			utils.RPCCORSDomainFlag,
-			utils.RPCVirtualHostsFlag,
+			utils.GraphQLEnabledFlag,
+			utils.GraphQLListenAddrFlag,
+			utils.GraphQLPortFlag,
+			utils.GraphQLCORSDomainFlag,
+			utils.GraphQLVirtualHostsFlag,
 			utils.JSpathFlag,
 			utils.ExecFlag,
 			utils.PreloadJSFlag,
@@ -181,6 +182,7 @@ var AppHelpFlagGroups = []flagGroup{
 			utils.BootnodesFlag,
 			utils.BootnodesV4Flag,
 			utils.BootnodesV5Flag,
+			utils.DNSDiscoveryFlag,
 			utils.ListenPortFlag,
 			utils.MaxPeersFlag,
 			utils.MaxPendingPeersFlag,
@@ -240,6 +242,8 @@ var AppHelpFlagGroups = []flagGroup{
 	{
 		Name: "DEPRECATED",
 		Flags: []cli.Flag{
+			utils.LightLegacyServFlag,
+			utils.LightLegacyPeersFlag,
 			utils.MinerLegacyThreadsFlag,
 			utils.MinerLegacyGasTargetFlag,
 			utils.MinerLegacyGasPriceFlag,
@@ -309,9 +313,6 @@ func init() {
 			var uncategorized []cli.Flag
 			for _, flag := range data.(*cli.App).Flags {
 				if _, ok := categorized[flag.String()]; !ok {
-					if strings.HasPrefix(flag.GetName(), "dashboard") {
-						continue
-					}
 					uncategorized = append(uncategorized, flag)
 				}
 			}

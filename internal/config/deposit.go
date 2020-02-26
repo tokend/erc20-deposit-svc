@@ -9,7 +9,7 @@ import (
 )
 
 type DepositConfig struct {
-	AdminSigner keypair.Full `fig:"admin_signer"`
+	AdminSigner keypair.Full `fig:"admin_signer,required"`
 }
 
 func (c *config) DepositConfig() DepositConfig {

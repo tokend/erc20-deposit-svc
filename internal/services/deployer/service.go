@@ -4,23 +4,20 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/tokend/erc20-deposit-svc/internal/horizon/submit"
+	"gitlab.com/distributed_lab/logan/v3/errors"
 	"hash/crc64"
 	"math/big"
 	"strings"
-	"time"
-
-	"gitlab.com/distributed_lab/logan/v3/errors"
 
 	regources "gitlab.com/tokend/regources/generated"
 
 	"github.com/spf13/cast"
 	"gitlab.com/tokend/go/xdrbuild"
 
-	"gitlab.com/distributed_lab/logan/v3"
-	"gitlab.com/distributed_lab/running"
-
 	"github.com/tokend/erc20-deposit-svc/internal/data"
+	"gitlab.com/distributed_lab/logan/v3"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
@@ -42,7 +39,6 @@ func (s *Service) Run(ctx context.Context) (err error) {
 		}
 	}()
 
-	fields := logan.F{}
 	systemType, err := s.getSystemType(externalSystemTypeEthereumKey)
 	if err != nil {
 		return errors.Wrap(err, "failed to get external system type")
@@ -52,31 +48,42 @@ func (s *Service) Run(ctx context.Context) (err error) {
 	}
 	deployedEntries, err := s.getExternalSystemPoolEntityCount(*systemType)
 	if err != nil {
-		s.log.WithError(err).Warn("unable to get deployed entries count")
+		return errors.Wrap(err, "unable to get deployed entries count")
 	}
+
 	for i := int(deployedEntries); i < s.config.DeployerConfig().ContractCount; i++ {
-		contract, err := s.deployContract()
+		nonce, err := s.eth.PendingNonceAt(ctx, s.config.DeployerConfig().KeyPair.Address())
+		if err != nil {
+			return errors.Wrap(err, "failed to retrieve account nonce")
+		}
+		contractAddress := crypto.CreateAddress(s.config.DeployerConfig().KeyPair.Address(), nonce)
+
+		if err := s.createPoolEntities(contractAddress.Hex(), *systemType); err != nil {
+			return errors.Wrap(err, "failed to create pool entry")
+		}
+
+		contract, err := s.deployContract(big.NewInt(0).SetUint64(nonce))
 		if err != nil {
 			return errors.Wrap(err, "failed to deploy contract")
 		}
+
+		fields := logan.F{}
 		fields["contract"] = contract.Hex()
 		s.log.WithFields(fields).Info("contract deployed")
 
-		// critical section. contract has been deployed, we need to create entity at any cost
-		running.UntilSuccess(context.Background(), s.log, "create-pool-entity", func(i context.Context) (bool, error) {
-			if err := s.createPoolEntities(contract.Hex(), *systemType); err != nil {
-				return false, err
-			}
-			return true, nil
-		}, 1*time.Second, 2*time.Second)
+		if contract.Hex() != contractAddress.Hex() {
+			fields["expected_contract"] = contractAddress
+			return errors.From(errors.New("contract address mismatch"), fields)
+		}
 	}
+
 	return nil
 }
 
-func (s *Service) deployContract() (*common.Address, error) {
+func (s *Service) deployContract(nonce *big.Int) (*common.Address, error) {
 	_, tx, _, err := data.DeployContract(&bind.TransactOpts{
 		From:  s.config.DeployerConfig().KeyPair.Address(),
-		Nonce: nil,
+		Nonce: nonce,
 		Signer: func(signer types.Signer, addr common.Address, tx *types.Transaction) (*types.Transaction, error) {
 			return s.config.DeployerConfig().KeyPair.SignTX(tx)
 		},

@@ -4,12 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/tokend/erc20-deposit-svc/internal/horizon/submit"
-	"gitlab.com/distributed_lab/logan/v3/errors"
 	"hash/crc64"
 	"math/big"
 	"strings"
+	"time"
+
+	"gitlab.com/tokend/go/xdr"
+
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/tokend/erc20-deposit-svc/internal/horizon/submit"
+	"gitlab.com/distributed_lab/logan/v3/errors"
+	"gitlab.com/distributed_lab/running"
 
 	regources "gitlab.com/tokend/regources/generated"
 
@@ -58,12 +63,16 @@ func (s *Service) Run(ctx context.Context) (err error) {
 		}
 		contractAddress := crypto.CreateAddress(s.config.DeployerConfig().KeyPair.Address(), nonce)
 
-		if err := s.createPoolEntities(contractAddress.Hex(), *systemType); err != nil {
+		poolEntryID, err := s.createPoolEntities(contractAddress.Hex(), *systemType)
+		if err != nil {
 			return errors.Wrap(err, "failed to create pool entry")
 		}
 
 		contract, err := s.deployContract(big.NewInt(0).SetUint64(nonce))
 		if err != nil {
+			running.WithThreshold(context.Background(), s.log, "remove-pool", func(ctx context.Context) (bool, error) {
+				return s.removePoolEntry(*poolEntryID)
+			}, time.Second, 2*time.Second, 5)
 			return errors.Wrap(err, "failed to deploy contract")
 		}
 
@@ -110,7 +119,7 @@ func (s *Service) deployContract(nonce *big.Int) (*common.Address, error) {
 	return &receipt.ContractAddress, nil
 }
 
-func (s *Service) createPoolEntities(address string, systemType uint32) error {
+func (s *Service) createPoolEntities(address string, systemType uint32) (*uint64, error) {
 	deployerID := Hash64(s.config.DeployerConfig().KeyPair.Address().Bytes())
 	data := EthereumAddress{
 		Type: "address",
@@ -120,14 +129,42 @@ func (s *Service) createPoolEntities(address string, systemType uint32) error {
 	}
 	dataBytes, err := json.Marshal(data)
 	if err != nil {
-		return errors.Wrap(err, "failed to marshal data")
+		return nil, errors.Wrap(err, "failed to marshal data")
 	}
 
 	envelope, err := s.builder.Transaction(s.config.DeployerConfig().Signer).
 		Op(xdrbuild.CreateExternalPoolEntry(cast.ToInt32(systemType), cast.ToString(dataBytes), deployerID)).
 		Sign(s.config.DeployerConfig().Signer).Marshal()
 	if err != nil {
-		return errors.Wrap(err, "failed to marshal tx")
+		return nil, errors.Wrap(err, "failed to marshal tx")
+	}
+
+	result, err := s.submitter.Submit(context.TODO(), envelope, true)
+	if err != nil {
+		fields := make(logan.F, 1)
+		if fail, ok := err.(submit.TxFailure); ok {
+			fields["tx"] = fail
+		}
+		return nil, errors.Wrap(err, "failed to submit tx", fields)
+	}
+
+	var txRes xdr.TransactionResult
+	err = xdr.SafeUnmarshalBase64(result.Data.Attributes.EnvelopeXdr, &txRes)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal tx result")
+	}
+	opRes := txRes.Result.MustResults()[0]
+	success := opRes.MustTr().MustManageExternalSystemAccountIdPoolEntryResult().MustSuccess()
+
+	return (*uint64)(&success.PoolEntryId), nil
+}
+
+func (s *Service) removePoolEntry(id uint64) (bool, error) {
+	envelope, err := s.builder.Transaction(s.config.DeployerConfig().Signer).
+		Op(xdrbuild.RemoveExternalPoolEntry(id)).
+		Sign(s.config.DeployerConfig().Signer).Marshal()
+	if err != nil {
+		return false, errors.Wrap(err, "failed to marshal tx")
 	}
 
 	_, err = s.submitter.Submit(context.TODO(), envelope, true)
@@ -136,10 +173,12 @@ func (s *Service) createPoolEntities(address string, systemType uint32) error {
 		if fail, ok := err.(submit.TxFailure); ok {
 			fields["tx"] = fail
 		}
-		return errors.Wrap(err, "failed to submit tx", fields)
+		return false, errors.Wrap(err, "failed to submit tx", fields)
 	}
 
-	return nil
+	s.log.WithField("pool_entry_id", id).Warn("entry removed")
+
+	return true, nil
 }
 
 func (s *Service) getSystemType(key string) (*uint32, error) {

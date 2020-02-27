@@ -1,10 +1,14 @@
 package xdrbuild
 
-import "gitlab.com/tokend/go/xdr"
+import (
+	"gitlab.com/distributed_lab/logan/v3/errors"
+	"gitlab.com/tokend/go/xdr"
+)
 
 type ManageExternalPoolEntryOp struct {
 	Action xdr.ManageExternalSystemAccountIdPoolEntryAction
 	Create *createExternalPoolEntryInput
+	Remove *uint64
 }
 
 func (op ManageExternalPoolEntryOp) XDR() (*xdr.Operation, error) {
@@ -21,13 +25,17 @@ func (op ManageExternalPoolEntryOp) XDR() (*xdr.Operation, error) {
 			Data:               xdr.Longstring(op.Create.Data),
 			Parent:             xdr.Uint64(op.Create.Parent),
 		}
+	case xdr.ManageExternalSystemAccountIdPoolEntryActionRemove:
+		mop.ActionInput.DeleteExternalSystemAccountIdPoolEntryActionInput = &xdr.DeleteExternalSystemAccountIdPoolEntryActionInput{
+			PoolEntryId: xdr.Uint64(*op.Remove),
+		}
 	default:
-		panic("not implemented")
+		return nil, errors.New("unexpected action")
 	}
 
 	return &xdr.Operation{
 		Body: xdr.OperationBody{
-			Type: xdr.OperationTypeManageExternalSystemAccountIdPoolEntry,
+			Type:                                     xdr.OperationTypeManageExternalSystemAccountIdPoolEntry,
 			ManageExternalSystemAccountIdPoolEntryOp: &mop,
 		},
 	}, nil
@@ -47,5 +55,12 @@ func CreateExternalPoolEntry(externalSystemType int32, data string, parent uint6
 			Data:               data,
 			Parent:             parent,
 		},
+	}
+}
+
+func RemoveExternalPoolEntry(id uint64) ManageExternalPoolEntryOp {
+	return ManageExternalPoolEntryOp{
+		Action: xdr.ManageExternalSystemAccountIdPoolEntryActionRemove,
+		Remove: &id,
 	}
 }

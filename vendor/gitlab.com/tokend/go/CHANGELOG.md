@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+### Added 
+
+* Update signer operation builder
+* Update asset operation builder
+
+### Added
+
+* Remove asset operation builder
+* Redemption reviewable request
+
+### Changed
+
+* `signcontrol.IsSigned` now check if v2 auth headers presented.
+
+## 3.10.0
+
 ### Added
 
 * `manage_poll_op` operation with `ClosePoll` arm

@@ -397,12 +397,12 @@
   version = "v3.7.1"
 
 [[projects]]
-  digest = "1:8af08868d6b7749b3046edfcb8871d8cc1e4de1c4326552ed648e71f757dfdfb"
+  digest = "1:6dab50184d27435d4e231a2a2eba6a6f8b30c8a84c41340d902f8bfc03affcbd"
   name = "gitlab.com/distributed_lab/running"
   packages = ["."]
   pruneopts = "T"
-  revision = "d1fe1d23a4bcfb5ce23cb8ab9416256e882555e4"
-  version = "v1.2"
+  revision = "aded59ee376f6a43be772de6cd02eb7ab3bc0899"
+  version = "v1.4"
 
 [[projects]]
   branch = "feature/v3"
@@ -413,8 +413,8 @@
   revision = "80582815f6cea88534371d4a5e6271ab645199ec"
 
 [[projects]]
-  branch = "feature/op-manage-external-system-pool-entry"
-  digest = "1:85bb49af833a339b7d223e40fcac980c162c702ddd23c97fe534d3dcaad9f597"
+  branch = "fix/manage_external_sys_id_pool_builder"
+  digest = "1:3b6fb3bef190b50461ad2f68a6519712ec06d23bb36f4aad7c60d57a09897f8b"
   name = "gitlab.com/tokend/go"
   packages = [
     "amount",
@@ -430,7 +430,7 @@
     "xdrbuild/internal",
   ]
   pruneopts = "T"
-  revision = "58b84195f716cdb41715244d3345fba88c569eb6"
+  revision = "3a064657bd5dc6ce650907cf4c378fc967d374dc"
 
 [[projects]]
   digest = "1:0cc74bfe93bf9807f21bd164dcdbe6fe8415f00803ac06fd455d8088fdffc0bf"

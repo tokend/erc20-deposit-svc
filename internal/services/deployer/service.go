@@ -154,7 +154,7 @@ func (s *Service) createPoolEntities(address string, systemType uint32) (*uint64
 	}
 
 	var txRes xdr.TransactionResult
-	err = xdr.SafeUnmarshalBase64(result.Data.Attributes.EnvelopeXdr, &txRes)
+	err = xdr.SafeUnmarshalBase64(result.Data.Attributes.ResultXdr, &txRes)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal tx result")
 	}

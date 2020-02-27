@@ -108,10 +108,15 @@ func (s *Service) deployContract(nonce *big.Int) (*common.Address, error) {
 
 	eth.EnsureHashMined(context.Background(), s.log.WithField("tx_hash", tx.Hash().Hex()), s.eth, tx.Hash())
 
-	receipt, err := s.eth.TransactionReceipt(context.Background(), tx.Hash())
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get tx receipt")
-	}
+	var receipt *types.Receipt
+	running.UntilSuccess(context.Background(), s.log, "receipt-getter", func(ctx context.Context) (bool, error) {
+		receipt, err = s.eth.TransactionReceipt(context.Background(), tx.Hash())
+		if err != nil {
+			return false, errors.Wrap(err, "failed to get tx receipt")
+		}
+
+		return true, nil
+	}, time.Second, 3*time.Second)
 
 	// TODO check transaction state/status to see if contract actually was deployed
 	// TODO panic if we are not sure if contract is valid
@@ -160,6 +165,7 @@ func (s *Service) createPoolEntities(address string, systemType uint32) (*uint64
 }
 
 func (s *Service) removePoolEntry(id uint64) (bool, error) {
+	s.log.WithField("pool_entry_id", id).Debug("start removing pol entry")
 	envelope, err := s.builder.Transaction(s.config.DeployerConfig().Signer).
 		Op(xdrbuild.RemoveExternalPoolEntry(id)).
 		Sign(s.config.DeployerConfig().Signer).Marshal()

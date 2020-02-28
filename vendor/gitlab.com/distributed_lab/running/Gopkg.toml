@@ -29,6 +29,10 @@
   name = "gitlab.com/distributed_lab/logan"
   version = "^3.4.1"
 
+[[constraint]]
+  name = "gitlab.com/distributed_lab/kit"
+  branch = "master"
+
 [prune]
   go-tests = true
   unused-packages = true

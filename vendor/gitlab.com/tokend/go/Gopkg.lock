@@ -10,6 +10,14 @@
   version = "v1.1.0"
 
 [[projects]]
+  digest = "1:55d7786e315a68ad27227a9800ebed9c48a23379de13358ab9a331ae8fe39283"
+  name = "github.com/go-chi/chi"
+  packages = ["."]
+  pruneopts = ""
+  revision = "da24bba8dcd4021cafac38724bf10dccc97c3e36"
+  version = "v4.0.2"
+
+[[projects]]
   digest = "1:cb589c43cf1a44b8583a1ffa01eb16cdd7346a396797049f86a6d3c93c73003a"
   name = "github.com/go-ozzo/ozzo-validation"
   packages = ["."]
@@ -91,15 +99,12 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:3ac248add5bb40a3c631c5334adcd09aa72d15af2768a5bc0274084ea7b2e5ba"
-  name = "github.com/sirupsen/logrus"
-  packages = [
-    ".",
-    "hooks/test",
-  ]
+  digest = "1:ae3493c780092be9d576a1f746ab967293ec165e8473425631f06658b6212afc"
+  name = "github.com/spf13/cast"
+  packages = ["."]
   pruneopts = ""
-  revision = "f006c2ac4710855cf0f916dd6b77acf6b048dc6e"
-  version = "v1.0.3"
+  revision = "8c9545af88b134710ab1cd196795e7f2388358d7"
+  version = "v1.3.0"
 
 [[projects]]
   digest = "1:88e031206b52c11a8442f3f07e9bcddc1b248274d0506c768a948e7e254b84bb"
@@ -160,7 +165,6 @@
   packages = [
     "ed25519",
     "ed25519/internal/edwards25519",
-    "ssh/terminal",
   ]
   pruneopts = ""
   revision = "9419663f5a44be8b34ca85f08abc5fe1be11f8a3"
@@ -181,10 +185,7 @@
   branch = "master"
   digest = "1:5cfdfd9ad3bb16158ab73df545388f3d5af149972a9a537e06c26b9d32006ba4"
   name = "golang.org/x/sys"
-  packages = [
-    "unix",
-    "windows",
-  ]
+  packages = ["unix"]
   pruneopts = ""
   revision = "ebfc5b4631820b793c9010c87fd8fef0f39eb082"
 
@@ -226,6 +227,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/go-chi/chi",
     "github.com/go-ozzo/ozzo-validation",
     "github.com/nullstyle/go-xdr/xdr3",
     "github.com/onsi/ginkgo",
@@ -233,8 +235,7 @@
     "github.com/onsi/gomega",
     "github.com/onsi/gomega/types",
     "github.com/pkg/errors",
-    "github.com/sirupsen/logrus",
-    "github.com/sirupsen/logrus/hooks/test",
+    "github.com/spf13/cast",
     "github.com/stretchr/testify/assert",
     "github.com/stretchr/testify/mock",
     "github.com/stretchr/testify/require",

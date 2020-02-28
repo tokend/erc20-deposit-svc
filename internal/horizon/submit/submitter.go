@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/tokend/erc20-deposit-svc/internal/horizon/client"
@@ -127,3 +128,11 @@ func newTxFailure(response txFailureResponse) TxFailure {
 
 	return failure
 }
+
+func (t TxFailure)GetLoganFields() map[string]interface{} {
+	 return map[string]interface{}{
+		"result_xdr":t.ResultXDR,
+		"transaction_result_code":t.TransactionResultCode,
+		"operation_result_codes":fmt.Sprint(t.OperationResultCodes),
+ 	 }
+ }

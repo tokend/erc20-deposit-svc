@@ -26,8 +26,9 @@ type SignerOfOpts struct {
 	Constraints []SignerOfExt
 }
 
-func NewWithOpts(accountQ data.AccountQ, opts SignerOfOpts) Doorman {
+func NewWithOpts(passAllChecks bool, accountQ data.AccountQ, opts SignerOfOpts) Doorman {
 	return &doorman{
+		SkipChecker:  data.NewChecker(passAllChecks),
 		AccountQ:     accountQ,
 		signerOfExts: opts.Constraints,
 	}

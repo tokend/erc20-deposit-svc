@@ -2,7 +2,6 @@ package withdrawer
 
 import (
 	"context"
-
 	"github.com/tokend/erc20-deposit-svc/internal/data"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -45,7 +44,7 @@ func (s *Service) Run(ctx context.Context) error {
 			return errors.Wrap(err, "failed to get balance of")
 		}
 		fields["balance"] = balance.String()
-		if balance.Cmp(eth.FromGwei(s.threshold)) == -1 {
+		if balance.Cmp(s.threshold) == -1 {
 			s.log.WithFields(fields).Info("lower than threshold")
 			continue
 		}
@@ -80,9 +79,9 @@ func (s *Service) getContract(address common.Address) (*data.Contract, error) {
 	}
 
 	contract, err := data.NewContract(address, s.eth)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to init contract")
-		}
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to init contract")
+	}
 
 	s.contracts[address.Hex()] = *contract
 

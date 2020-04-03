@@ -15,6 +15,7 @@ import (
 
 type FunnelConfig struct {
 	GasPrice   *big.Int       `fig:"gas_price,required"`
+	//Wei
 	Threshold  *big.Int       `fig:"threshold,required"`
 	HotWallet  common.Address `fig:"hot_wallet,required"`
 	PrivateKey string         `fig:"private_key,required"`

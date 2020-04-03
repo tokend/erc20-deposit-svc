@@ -35,7 +35,7 @@
   name = "github.com/sirupsen/logrus"
   version = "1.0.3"
 
-[[constraint]]
+[[override]]
   name = "gitlab.com/distributed_lab/kit"
   version = "0.7.0"
 
@@ -45,7 +45,7 @@
 
 [[override]]
   name = "gitlab.com/tokend/go"
-  branch = "feature/op-manage-external-system-pool-entry"
+  branch = "fix/manage_external_sys_id_pool_builder"
 
 
 [[constraint]]
@@ -58,7 +58,7 @@
 
 [[constraint]]
   name = "gitlab.com/distributed_lab/running"
-  version = "1.2.0"
+  version = "1.4.0"
 
 [[constraint]]
   name = "gitlab.com/tokend/addrstate"
@@ -66,4 +66,4 @@
 
 [[constraint]]
   name = "github.com/ethereum/go-ethereum"
-  revision = "2b546660187e8b693b6bbe5ec0fc74bfc008d1d3"
+  version = "1.9.11"

@@ -9,17 +9,20 @@ import (
 	"strings"
 	"time"
 
+	"gitlab.com/tokend/go/xdr"
+
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/tokend/erc20-deposit-svc/internal/horizon/submit"
 	"gitlab.com/distributed_lab/logan/v3/errors"
+	"gitlab.com/distributed_lab/running"
 
 	regources "gitlab.com/tokend/regources/generated"
 
 	"github.com/spf13/cast"
 	"gitlab.com/tokend/go/xdrbuild"
 
-	"gitlab.com/distributed_lab/logan/v3"
-	"gitlab.com/distributed_lab/running"
-
 	"github.com/tokend/erc20-deposit-svc/internal/data"
+	"gitlab.com/distributed_lab/logan/v3"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
@@ -41,7 +44,6 @@ func (s *Service) Run(ctx context.Context) (err error) {
 		}
 	}()
 
-	fields := logan.F{}
 	systemType, err := s.getSystemType(externalSystemTypeEthereumKey)
 	if err != nil {
 		return errors.Wrap(err, "failed to get external system type")
@@ -51,31 +53,46 @@ func (s *Service) Run(ctx context.Context) (err error) {
 	}
 	deployedEntries, err := s.getExternalSystemPoolEntityCount(*systemType)
 	if err != nil {
-		s.log.WithError(err).Warn("unable to get deployed entries count")
+		return errors.Wrap(err, "unable to get deployed entries count")
 	}
+
 	for i := int(deployedEntries); i < s.config.DeployerConfig().ContractCount; i++ {
-		contract, err := s.deployContract()
+		nonce, err := s.eth.PendingNonceAt(ctx, s.config.DeployerConfig().KeyPair.Address())
 		if err != nil {
+			return errors.Wrap(err, "failed to retrieve account nonce")
+		}
+		contractAddress := crypto.CreateAddress(s.config.DeployerConfig().KeyPair.Address(), nonce)
+
+		poolEntryID, err := s.createPoolEntities(contractAddress.Hex(), *systemType)
+		if err != nil {
+			return errors.Wrap(err, "failed to create pool entry")
+		}
+
+		contract, err := s.deployContract(big.NewInt(0).SetUint64(nonce))
+		if err != nil {
+			running.WithThreshold(context.Background(), s.log, "remove-pool", func(ctx context.Context) (bool, error) {
+				return s.removePoolEntry(*poolEntryID)
+			}, time.Second, 2*time.Second, 5)
 			return errors.Wrap(err, "failed to deploy contract")
 		}
+
+		fields := logan.F{}
 		fields["contract"] = contract.Hex()
 		s.log.WithFields(fields).Info("contract deployed")
 
-		// critical section. contract has been deployed, we need to create entity at any cost
-		running.UntilSuccess(context.Background(), s.log, "create-pool-entity", func(i context.Context) (bool, error) {
-			if err := s.createPoolEntities(contract.Hex(), *systemType); err != nil {
-				return false, err
-			}
-			return true, nil
-		}, 1*time.Second, 2*time.Second)
+		if contract.Hex() != contractAddress.Hex() {
+			fields["expected_contract"] = contractAddress
+			return errors.From(errors.New("contract address mismatch"), fields)
+		}
 	}
+
 	return nil
 }
 
-func (s *Service) deployContract() (*common.Address, error) {
+func (s *Service) deployContract(nonce *big.Int) (*common.Address, error) {
 	_, tx, _, err := data.DeployContract(&bind.TransactOpts{
 		From:  s.config.DeployerConfig().KeyPair.Address(),
-		Nonce: nil,
+		Nonce: nonce,
 		Signer: func(signer types.Signer, addr common.Address, tx *types.Transaction) (*types.Transaction, error) {
 			return s.config.DeployerConfig().KeyPair.SignTX(tx)
 		},
@@ -91,10 +108,15 @@ func (s *Service) deployContract() (*common.Address, error) {
 
 	eth.EnsureHashMined(context.Background(), s.log.WithField("tx_hash", tx.Hash().Hex()), s.eth, tx.Hash())
 
-	receipt, err := s.eth.TransactionReceipt(context.Background(), tx.Hash())
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get tx receipt")
-	}
+	var receipt *types.Receipt
+	running.UntilSuccess(context.Background(), s.log, "receipt-getter", func(ctx context.Context) (bool, error) {
+		receipt, err = s.eth.TransactionReceipt(context.Background(), tx.Hash())
+		if err != nil {
+			return false, errors.Wrap(err, "failed to get tx receipt")
+		}
+
+		return true, nil
+	}, time.Second, 3*time.Second)
 
 	// TODO check transaction state/status to see if contract actually was deployed
 	// TODO panic if we are not sure if contract is valid
@@ -102,7 +124,7 @@ func (s *Service) deployContract() (*common.Address, error) {
 	return &receipt.ContractAddress, nil
 }
 
-func (s *Service) createPoolEntities(address string, systemType uint32) error {
+func (s *Service) createPoolEntities(address string, systemType uint32) (*uint64, error) {
 	deployerID := Hash64(s.config.DeployerConfig().KeyPair.Address().Bytes())
 	data := EthereumAddress{
 		Type: "address",
@@ -112,24 +134,57 @@ func (s *Service) createPoolEntities(address string, systemType uint32) error {
 	}
 	dataBytes, err := json.Marshal(data)
 	if err != nil {
-		return errors.Wrap(err, "failed to marshal data")
+		return nil, errors.Wrap(err, "failed to marshal data")
 	}
 
 	envelope, err := s.builder.Transaction(s.config.DeployerConfig().Signer).
 		Op(xdrbuild.CreateExternalPoolEntry(cast.ToInt32(systemType), cast.ToString(dataBytes), deployerID)).
 		Sign(s.config.DeployerConfig().Signer).Marshal()
 	if err != nil {
-		return errors.Wrap(err, "failed to marshal tx")
+		return nil, errors.Wrap(err, "failed to marshal tx")
 	}
 
 	result, err := s.submitter.Submit(context.TODO(), envelope, true)
 	if err != nil {
-		body, _ := json.Marshal(result)
-		s.log.Error(string(body))
-		return errors.Wrap(err, "failed to submit tx")
+		fields := make(logan.F, 1)
+		if fail, ok := err.(submit.TxFailure); ok {
+			fields["tx"] = fail
+		}
+		return nil, errors.Wrap(err, "failed to submit tx", fields)
 	}
 
-	return nil
+	var txRes xdr.TransactionResult
+	err = xdr.SafeUnmarshalBase64(result.Data.Attributes.ResultXdr, &txRes)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal tx result")
+	}
+	opRes := txRes.Result.MustResults()[0]
+	success := opRes.MustTr().MustManageExternalSystemAccountIdPoolEntryResult().MustSuccess()
+
+	return (*uint64)(&success.PoolEntryId), nil
+}
+
+func (s *Service) removePoolEntry(id uint64) (bool, error) {
+	s.log.WithField("pool_entry_id", id).Debug("start removing pol entry")
+	envelope, err := s.builder.Transaction(s.config.DeployerConfig().Signer).
+		Op(xdrbuild.RemoveExternalPoolEntry(id)).
+		Sign(s.config.DeployerConfig().Signer).Marshal()
+	if err != nil {
+		return false, errors.Wrap(err, "failed to marshal tx")
+	}
+
+	_, err = s.submitter.Submit(context.TODO(), envelope, true)
+	if err != nil {
+		fields := make(logan.F, 1)
+		if fail, ok := err.(submit.TxFailure); ok {
+			fields["tx"] = fail
+		}
+		return false, errors.Wrap(err, "failed to submit tx", fields)
+	}
+
+	s.log.WithField("pool_entry_id", id).Warn("entry removed")
+
+	return true, nil
 }
 
 func (s *Service) getSystemType(key string) (*uint32, error) {

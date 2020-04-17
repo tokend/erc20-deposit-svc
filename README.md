@@ -59,13 +59,17 @@ Origin must be explicitly or implicitly whitelisted:
 either `--wsorigins "some_origin"`, or `--wsorigins *` to accept all connections.
 WS APIs `eth` and `web3` must be enabled as well.
 Do not forget to forward ports.
+We have faced OOM kills of the container even with 16 Gb of RAM so auto restart is recomended.
 
 Example startup command for Docker image:
 
 ```bash
 docker run -dit -p 0.0.0.0:8080:8080 -p 0.0.0.0:30303:30303 -p 0.0.0.0:8545:8545 -p 0.0.0.0:8546:8546 \
---name <preferred_container_name> -v <path_to_volume>:/root/.ethereum ethereum/client-go:stable \
+--name <preferred_container_name> \
+--restart on-failure \
+-v <path_to_volume>:/root/.ethereum \
+ethereum/client-go:v1.9.11 \
 --datadir "/root/.ethereum/data" \
 --rpc --rpcaddr '0.0.0.0' --rpcapi "eth, web3" \
---ws --wsapi "eth, web3" --wsaddr '0.0.0.0' --wsorigins="*"
+--ws --wsaddr '0.0.0.0' --wsapi "eth, web3"  --wsorigins="*"
 ```

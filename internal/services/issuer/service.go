@@ -119,7 +119,11 @@ func (s *Service) submitEnvelope(ctx context.Context, envelope string) error {
 		}
 	}
 	if err != nil {
-		return errors.Wrap(err, "Horizon SubmitResult has error")
+		var f logan.F
+		if submitFailure, ok := err.(submit.TxFailure); ok {
+			f = submitFailure.GetLoganFields()
+		}
+		return errors.Wrap(err, "Horizon SubmitResult has error", f)
 	}
 	return nil
 }

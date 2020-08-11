@@ -31,7 +31,7 @@ import (
 	"github.com/tokend/erc20-deposit-svc/internal/data/eth"
 )
 
-const externalSystemTypeEthereumKey = "external_system_type:ethereum"
+const externalSystemTypeEthereumERC20Key = "external_system_type:ethereum_erc20"
 
 func (s *Service) Run(ctx context.Context) (err error) {
 	ctx, cancel := context.WithCancel(ctx)
@@ -44,7 +44,7 @@ func (s *Service) Run(ctx context.Context) (err error) {
 		}
 	}()
 
-	systemType, err := s.getSystemType(externalSystemTypeEthereumKey)
+	systemType, err := s.getSystemType(externalSystemTypeEthereumERC20Key)
 	if err != nil {
 		return errors.Wrap(err, "failed to get external system type")
 	}

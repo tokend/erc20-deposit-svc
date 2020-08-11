@@ -34,7 +34,7 @@ type transactionStreamer interface {
 	) (<-chan regources.TransactionListResponse, <-chan error)
 }
 
-const externalSystemTypeEthereumKey = "external_system_type:ethereum"
+const externalSystemTypeEthereumERC20Key = "external_system_type:ethereum_erc20"
 
 type Service struct {
 	config          config.Config
@@ -72,7 +72,7 @@ func New(cfg config.Config) *Service {
 }
 
 func (s *Service) Run(ctx context.Context) error {
-	systemType, err := s.getSystemType(externalSystemTypeEthereumKey)
+	systemType, err := s.getSystemType(externalSystemTypeEthereumERC20Key)
 	if err != nil {
 		return errors.Wrap(err, "failed to get external system type")
 	}

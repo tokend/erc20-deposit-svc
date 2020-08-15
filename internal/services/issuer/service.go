@@ -125,11 +125,11 @@ func (s *Service) submitEnvelope(ctx context.Context, envelope string) error {
 }
 
 func amountToIssue(am *big.Int, decimals int64, trailingDigits int64) uint64 {
-	var toIssue uint64
+	var toIssue *big.Int
 	if decimals > trailingDigits {
-		toIssue = am.Uint64() / big.NewInt(1).Exp(big.NewInt(10), big.NewInt(decimals-trailingDigits), nil).Uint64()
+		toIssue = big.NewInt(0).Div(am, big.NewInt(1).Exp(big.NewInt(10), big.NewInt(decimals-trailingDigits), nil))
 	} else {
-		toIssue = am.Uint64() * big.NewInt(1).Exp(big.NewInt(10), big.NewInt(trailingDigits-decimals), nil).Uint64()
+		toIssue = big.NewInt(0).Mul(am, big.NewInt(1).Exp(big.NewInt(10), big.NewInt(trailingDigits-decimals), nil))
 	}
-	return toIssue
+	return toIssue.Uint64()
 }

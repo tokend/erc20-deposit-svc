@@ -21,6 +21,11 @@ func (s *Service) Run(ctx context.Context) error {
 		})
 	}
 
+	chainID, err := s.eth.ChainID(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get chain id")
+	}
+
 	fields := logan.F{}
 	entities := s.addressProvider.BindedExternalSystemEntities(ctx, int32(s.systemType))
 	for _, entity := range entities {
@@ -54,7 +59,7 @@ func (s *Service) Run(ctx context.Context) error {
 			GasPrice: eth.FromGwei(s.gasPrice),
 			GasLimit: 200000,
 			Signer: func(signer types.Signer, addresses common.Address, transaction *types.Transaction) (*types.Transaction, error) {
-				return s.keyPair.SignTX(transaction)
+				return s.keyPair.SignTX(transaction, chainID)
 			},
 		}, s.hotWallet, s.details.ERC20.Address)
 		if err != nil {
@@ -80,9 +85,9 @@ func (s *Service) getContract(address common.Address) (*data.Contract, error) {
 	}
 
 	contract, err := data.NewContract(address, s.eth)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to init contract")
-		}
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to init contract")
+	}
 
 	s.contracts[address.Hex()] = *contract
 

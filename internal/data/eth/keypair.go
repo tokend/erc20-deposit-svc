@@ -2,6 +2,7 @@ package eth
 
 import (
 	"context"
+	"math/big"
 
 	"strings"
 
@@ -33,6 +34,7 @@ func (kp *Keypair) Address() common.Address {
 	return kp.wallet.Addresses(context.Background())[0]
 }
 
-func (kp *Keypair) SignTX(tx *types.Transaction) (*types.Transaction, error) {
-	return kp.wallet.SignTX(kp.Address(), tx)
+func (kp *Keypair) SignTX(tx *types.Transaction, chainID *big.Int,
+) (*types.Transaction, error) {
+	return kp.wallet.SignTX(kp.Address(), tx, chainID)
 }

@@ -2,6 +2,7 @@ package eth
 
 import (
 	"encoding/hex"
+	"math/big"
 
 	"crypto/ecdsa"
 
@@ -94,16 +95,18 @@ func (wallet *Wallet) Addresses(ctx context.Context) (result []common.Address) {
 	return result
 }
 
-func (wallet *Wallet) SignTX(address common.Address, tx *types.Transaction) (*types.Transaction, error) {
+func (wallet *Wallet) SignTX(address common.Address, tx *types.Transaction, chainID *big.Int,
+) (*types.Transaction, error) {
 	key, ok := wallet.keys[address]
 	if !ok {
 		return nil, ErrNoKey
 	}
-	return SignTXWithPrivate(&key, tx)
+	return SignTXWithPrivate(&key, tx, chainID)
 }
 
-func SignTXWithPrivate(key *ecdsa.PrivateKey, tx *types.Transaction) (*types.Transaction, error) {
-	return types.SignTx(tx, types.HomesteadSigner{}, key)
+func SignTXWithPrivate(key *ecdsa.PrivateKey, tx *types.Transaction, chainID *big.Int,
+) (*types.Transaction, error) {
+	return types.SignTx(tx, types.NewEIP155Signer(chainID), key)
 }
 
 func (wallet *Wallet) HasAddress(address common.Address) bool {

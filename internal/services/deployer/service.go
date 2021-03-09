@@ -44,6 +44,11 @@ func (s *Service) Run(ctx context.Context) (err error) {
 		}
 	}()
 
+	chainID, err := s.eth.ChainID(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get chain id")
+	}
+
 	systemType, err := s.getSystemType(externalSystemTypeEthereumKey)
 	if err != nil {
 		return errors.Wrap(err, "failed to get external system type")
@@ -68,7 +73,7 @@ func (s *Service) Run(ctx context.Context) (err error) {
 			return errors.Wrap(err, "failed to create pool entry")
 		}
 
-		contract, err := s.deployContract(big.NewInt(0).SetUint64(nonce))
+		contract, err := s.deployContract(big.NewInt(0).SetUint64(nonce), chainID)
 		if err != nil {
 			running.WithThreshold(context.Background(), s.log, "remove-pool", func(ctx context.Context) (bool, error) {
 				return s.removePoolEntry(*poolEntryID)
@@ -89,12 +94,13 @@ func (s *Service) Run(ctx context.Context) (err error) {
 	return nil
 }
 
-func (s *Service) deployContract(nonce *big.Int) (*common.Address, error) {
+func (s *Service) deployContract(nonce *big.Int, chainID *big.Int,
+) (*common.Address, error) {
 	_, tx, _, err := data.DeployContract(&bind.TransactOpts{
 		From:  s.config.DeployerConfig().KeyPair.Address(),
 		Nonce: nonce,
 		Signer: func(signer types.Signer, addr common.Address, tx *types.Transaction) (*types.Transaction, error) {
-			return s.config.DeployerConfig().KeyPair.SignTX(tx)
+			return s.config.DeployerConfig().KeyPair.SignTX(tx, chainID)
 		},
 		Value:    big.NewInt(0),
 		GasPrice: eth.FromGwei(s.config.DeployerConfig().GasPrice),

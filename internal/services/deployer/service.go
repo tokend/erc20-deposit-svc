@@ -143,7 +143,7 @@ func (s *Service) createPoolEntities(address string, systemType uint32) (*uint64
 		return nil, errors.Wrap(err, "failed to marshal data")
 	}
 
-	envelope, err := s.builder.Transaction(s.config.DeployerConfig().Signer).
+	envelope, err := s.builder.Transaction(s.getTxSource()).
 		Op(xdrbuild.CreateExternalPoolEntry(cast.ToInt32(systemType), cast.ToString(dataBytes), deployerID)).
 		Sign(s.config.DeployerConfig().Signer).Marshal()
 	if err != nil {
@@ -172,7 +172,7 @@ func (s *Service) createPoolEntities(address string, systemType uint32) (*uint64
 
 func (s *Service) removePoolEntry(id uint64) (bool, error) {
 	s.log.WithField("pool_entry_id", id).Debug("start removing pol entry")
-	envelope, err := s.builder.Transaction(s.config.DeployerConfig().Signer).
+	envelope, err := s.builder.Transaction(s.getTxSource()).
 		Op(xdrbuild.RemoveExternalPoolEntry(id)).
 		Sign(s.config.DeployerConfig().Signer).Marshal()
 	if err != nil {

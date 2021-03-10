@@ -16,12 +16,13 @@ import (
 )
 
 type DeployerConfig struct {
-	KeyPair       *eth.Keypair   `fig:"private_key,required"`
-	GasPrice      *big.Int       `fig:"gas_price,required"`
-	GasLimit      *big.Int       `fig:"gas_limit,required"`
-	ContractCount int            `fig:"contract_count,required"`
-	ContractOwner common.Address `fig:"contract_owner,required"`
-	Signer        keypair.Full   `json:"signer,required"`
+	KeyPair       *eth.Keypair    `fig:"private_key,required"`
+	GasPrice      *big.Int        `fig:"gas_price,required"`
+	GasLimit      *big.Int        `fig:"gas_limit,required"`
+	ContractCount int             `fig:"contract_count,required"`
+	ContractOwner common.Address  `fig:"contract_owner,required"`
+	Signer        keypair.Full    `fig:"signer,required"`
+	Source        keypair.Address `fig:"source"`
 }
 
 func (c *config) DeployerConfig() DeployerConfig {

@@ -3,6 +3,8 @@ package deployer
 import (
 	"context"
 
+	"gitlab.com/tokend/keypair"
+
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/tokend/erc20-deposit-svc/internal/config"
 	"github.com/tokend/erc20-deposit-svc/internal/horizon"
@@ -39,4 +41,14 @@ func New(cfg config.Config) *Service {
 		horizon:   cfg.Horizon(),
 		submitter: submit.New(cfg.Horizon()),
 	}
+}
+
+func (s *Service) getTxSource() keypair.Address {
+	txSource := s.config.DeployerConfig().Source
+	if txSource != nil {
+		return txSource
+	}
+
+	s.log.Warn("using signer instead of source as tx source")
+	return s.config.DeployerConfig().Signer
 }

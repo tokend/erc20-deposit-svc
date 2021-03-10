@@ -43,20 +43,12 @@ func New(cfg config.Config) *Service {
 	}
 }
 
-// please forgive me
 func (s *Service) getTxSource() keypair.Address {
 	txSource := s.config.DeployerConfig().Source
 	if txSource != nil {
 		return txSource
 	}
 
-	connector := horizon.NewConnector(s.horizon)
-	horizonInfo, err := connector.State()
-	if err != nil {
-		s.log.WithError(err).Error("failed to get horizon info")
-		s.log.Warn("using signer instead of source")
-		return s.config.DeployerConfig().Signer
-	}
-
-	return keypair.MustParseAddress(horizonInfo.Data.Attributes.MasterAccountId)
+	s.log.Warn("using signer instead of source as tx source")
+	return s.config.DeployerConfig().Signer
 }

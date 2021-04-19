@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/tokend/erc20-deposit-svc/internal/horizon/query"
 	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/distributed_lab/logan/v3/errors"
 	"gitlab.com/distributed_lab/running"
@@ -31,8 +32,8 @@ func (s *Service) Run(ctx context.Context) {
 		s.log,
 		"asset-watcher",
 		s.processAllAssetsOnce,
-		10*time.Second,
 		20*time.Second,
+		30*time.Second,
 		5*time.Minute,
 	)
 }
@@ -59,6 +60,9 @@ func (s *Service) processAllAssetsOnce(ctx context.Context) error {
 }
 
 func (s *Service) getWatchList() ([]Details, error) {
+	activeAssets := uint32(0)
+	s.streamer.SetFilters(query.AssetFilters{State: &activeAssets})
+
 	assetsResponse, err := s.streamer.List()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get asset list")
@@ -92,9 +96,11 @@ func (s *Service) getWatchList() ([]Details, error) {
 func (s *Service) filter(assets []regources.Asset) ([]Details, error) {
 	result := make([]Details, 0, len(assets))
 	for _, asset := range assets {
-		details := asset.Attributes.Details
 		assetDetails := AssetDetails{}
-		_ = json.Unmarshal([]byte(details), &assetDetails)
+		err := json.Unmarshal(asset.Attributes.Details, &assetDetails)
+		if err != nil {
+			s.log.WithError(err).Debug("bad asset details json")
+		}
 
 		if !assetDetails.ERC20.Deposit {
 			continue

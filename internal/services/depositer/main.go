@@ -94,6 +94,7 @@ func (s *Service) cancellor(ctx context.Context) {
 }
 
 func (s *Service) spawn(ctx context.Context, details watchlist.Details) {
+	fields := logan.F{"asset": details.ID}
 
 	transferStreamer := transfer.New(transfer.Opts{
 		Client:       *s.config.EthClient(),
@@ -101,8 +102,11 @@ func (s *Service) spawn(ctx context.Context, details watchlist.Details) {
 		AssetDetails: details,
 		Config:       s.config.EthereumConfig(),
 	})
+	if transferStreamer == nil {
+		s.log.WithFields(fields).Warn("transfer streamer is nil, skipping this asset")
+		return
+	}
 
-	transfers := transferStreamer.GetCh()
 	issueSubmitter := issuer.New(issuer.Opts{
 		AssetDetails: details,
 		Log:          s.log,
@@ -113,7 +117,7 @@ func (s *Service) spawn(ctx context.Context, details watchlist.Details) {
 		Builder:     s.builder,
 		Signer:      s.config.DepositConfig().AdminSigner,
 		TxSubmitter: submit.New(s.config.Horizon()),
-		Chan:        transfers,
+		Chan:        transferStreamer.GetCh(),
 	})
 	verifierService := verifier.New(verifier.Opts{
 		Builder:   s.builder,
@@ -123,8 +127,7 @@ func (s *Service) spawn(ctx context.Context, details watchlist.Details) {
 		Client:    *s.config.EthClient(),
 		Asset:     details,
 		AdminID:   s.adminID,
-
-		Streamer: getters.NewDefaultCreateIssuanceRequestHandler(s.config.Horizon()),
+		Streamer:  getters.NewDefaultCreateIssuanceRequestHandler(s.config.Horizon()),
 	})
 
 	localCtx, cancelFunc := context.WithCancel(ctx)
@@ -134,5 +137,5 @@ func (s *Service) spawn(ctx context.Context, details watchlist.Details) {
 	go issueSubmitter.Run(localCtx)
 	go verifierService.Run(localCtx)
 
-	s.log.WithField("asset", details.ID).Info("Started listening for deposits")
+	s.log.WithFields(fields).Info("Started listening for deposits")
 }

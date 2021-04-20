@@ -150,7 +150,7 @@ func (s *Service) createPoolEntities(address string, systemType uint32) (*uint64
 		return nil, errors.Wrap(err, "failed to marshal tx")
 	}
 
-	result, err := s.submitter.Submit(context.TODO(), envelope, true)
+	result, err := s.submitter.Submit(context.TODO(), envelope, false)
 	if err != nil {
 		fields := make(logan.F, 1)
 		if fail, ok := err.(submit.TxFailure); ok {
@@ -179,7 +179,7 @@ func (s *Service) removePoolEntry(id uint64) (bool, error) {
 		return false, errors.Wrap(err, "failed to marshal tx")
 	}
 
-	_, err = s.submitter.Submit(context.TODO(), envelope, true)
+	_, err = s.submitter.Submit(context.TODO(), envelope, false)
 	if err != nil {
 		fields := make(logan.F, 1)
 		if fail, ok := err.(submit.TxFailure); ok {

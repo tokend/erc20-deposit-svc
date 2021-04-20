@@ -2,13 +2,15 @@ package query
 
 import (
 	"fmt"
-	"github.com/tokend/erc20-deposit-svc/internal/horizon/page"
 	"net/url"
+
+	"github.com/tokend/erc20-deposit-svc/internal/horizon/page"
 )
 
 type AssetFilters struct {
 	Owner  *string
 	Policy *uint32
+	State  *uint32
 }
 
 type AssetIncludes struct {
@@ -41,6 +43,9 @@ func (p AssetFilters) prepare(result *url.Values) {
 	}
 	if p.Owner != nil {
 		result.Add("filter[owner]", fmt.Sprintf("%s", *p.Owner))
+	}
+	if p.State != nil {
+		result.Add("filter[state]", fmt.Sprintf("%d", *p.State))
 	}
 }
 

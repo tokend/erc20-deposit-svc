@@ -2,14 +2,15 @@ package transfer
 
 import (
 	"context"
+	"math/big"
+	"time"
+
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/distributed_lab/logan/v3/errors"
 	"gitlab.com/distributed_lab/running"
-	"math/big"
-	"time"
 )
 
 type ERC20Transfer struct {
@@ -21,12 +22,8 @@ type ERC20Transfer struct {
 
 //Run starts service
 func (s *Service) Run(ctx context.Context) {
-	err := s.prepare(ctx)
-	if err != nil {
-		s.log.WithError(err).Fatal("failed to prepare transfer listener")
-	}
 	go running.WithBackOff(ctx, s.log, "old-transfer-listener", func(ctx context.Context) error {
-		err = s.processOld(ctx)
+		err := s.processOld(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to process old transfers")
 		}
@@ -35,14 +32,13 @@ func (s *Service) Run(ctx context.Context) {
 	}, time.Minute, time.Minute, time.Hour)
 
 	go running.WithBackOff(ctx, s.log, "new-transfer-listener", func(ctx context.Context) error {
-		err = s.processNew(ctx)
+		err := s.processNew(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to process new transfers")
 		}
 		s.log.Info("Finished streaming new transfers")
 		return nil
 	}, time.Minute, time.Minute, time.Hour)
-
 }
 
 func (s *Service) processOld(ctx context.Context) error {
